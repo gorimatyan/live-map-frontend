@@ -1,4 +1,4 @@
-import { AppleMap } from "@/components/AppleMap/AppleMap";
+import { AppleMap } from "@/components/AppleMap/AppleMap"
 
 export default function Home() {
   return (
@@ -7,5 +7,5 @@ export default function Home() {
       {/* <Link href="/fukuokashi" className="text-xl font-bold">福岡市を見る</Link> */}
       <AppleMap />
     </div>
-  );
+  )
 }
