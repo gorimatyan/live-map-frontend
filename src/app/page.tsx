@@ -1,6 +1,3 @@
-import Image from "next/image";
-import FukuokaKenMap from '@/components/FukuokaKenMap';
-import Link from "next/link";
 import { AppleMap } from "@/components/AppleMap/AppleMap";
 
 export default function Home() {
