@@ -9,6 +9,7 @@ import {
 import { renderAnnotations } from "@/utils/function/map/renderAnnotation"
 import { loadMapkitJs } from "@/utils/function/map/loadMapkitJs"
 import { toCompatibleBounds } from "@/utils/function/map/toCompatibleBounds"
+import { ChevronIcon } from "../Icons/ChevronIcon"
 
 type AppleMapProps = {
   centerPoint: [number, number]
@@ -34,7 +35,8 @@ export const AppleMap = ({
   const mapRef = useRef<[MapInstance, MapkitInstance] | null>(null) // マップの状態管理用のref
   const annotationRefs = useRef<Record<string, any>>({}) // アノテーション（マップにある印）の状態管理用のref
   const [iframeUrl, setIframeUrl] = useState<string | null>(null)
-  const [isIframeOpen, setIsIframeOpen] = useState<boolean>(false)
+  const [isSideFrameOpen, setIsSideFrameOpen] = useState<boolean>(false)
+  const [selectedElement, setSelectedElement] = useState<HTMLElement | null>(null)
 
   useEffect(() => {
     if (!div.current || mapRef.current) {
@@ -60,8 +62,29 @@ export const AppleMap = ({
   }, [mapAnnotationData])
 
   useEffect(() => {
-    setIsIframeOpen(!!iframeUrl)
+    setIsSideFrameOpen(!!iframeUrl)
   }, [iframeUrl])
+
+  useEffect(() => {
+    const observer = new MutationObserver((mutations) => {
+      mutations.forEach((mutation) => {
+        if (mutation.type === "attributes" && mutation.attributeName === "class") {
+          const selectedElement = document.getElementsByClassName(".mk-selected")[0]
+          console.log(`selectedElement`, selectedElement)
+          if (selectedElement) {
+            setSelectedElement(selectedElement.cloneNode(true) as HTMLElement)
+          }
+        }
+      })
+    })
+
+    const targetNode = document.body
+    observer.observe(targetNode, { attributes: true, subtree: true })
+
+    return () => {
+      observer.disconnect()
+    }
+  }, [])
 
   /**
    * マップを初期化する関数
@@ -189,16 +212,35 @@ export const AppleMap = ({
     // マーカーをクリックしたときの処理
     map.addEventListener("select", function (event) {
       console.log("select", event)
-      if (event.annotation) {
-        handleSelect(event.annotation.data?.link, event.annotation.data?.id)
-        annotationRefs.current[event.annotation.data?.id]?.onClick?.()
+
+      if (!event.annotation?.coordinate) {
+        return
       }
+
+      // クラスターアノテーションのクリック時のみ実行
+      if (event.annotation?.memberAnnotations != undefined) {
+        // クリックしたクラスターアノテーションの座標にズームする
+        const coordinate = event.annotation.coordinate
+        const span = new mapkit.CoordinateSpan(0.025, 0.025)
+        const region = new mapkit.CoordinateRegion(coordinate, span)
+        map.setRegionAnimated(region)
+        return
+      }
+
+      // 普通のアノテーションのクリック時のみ実行
+      if (event.annotation?.memberAnnotations == undefined) {
+        // アノテーションを選択状態にする
+        handleSelect(event.annotation.data?.link, event.annotation.data?.id)
+      }
+
+      annotationRefs.current[event.annotation.data?.id]?.onClick?.()
     })
 
     // マーカーを選択解除したときの処理
     map.addEventListener("deselect", function (event) {
       console.log("deselect", event)
       handleDeselect()
+      setSelectedElement(null)
       const annotationKey = event.annotation?.data.id
       if (annotationKey) {
         annotationRefs.current[annotationKey]?.onDeselect?.()
@@ -235,26 +277,21 @@ export const AppleMap = ({
     <>
       <div ref={div} className={className} {...props} />
       <div
-        className={`fixed top-0 right-2 h-full bg-white shadow-lg transition-transform ${
-          isIframeOpen ? "w-2/5 translate-x-0" : "w-0 translate-x-full"
+        className={`fixed top-0 left-0 h-full bg-white shadow-lg transition-transform ${
+          isSideFrameOpen ? "w-5/6 translate-x-0" : "w-0 -translate-x-full"
         }`}
       >
-        {/* {iframeUrl && (
-          <iframe
-            src={iframeUrl}
-            width="100%"
-            height="100%"
-            style={{ border: 0 }}
-            allowFullScreen
-            loading="lazy"
-          ></iframe>
-        )} */}
-        <button
-          onClick={() => setIsIframeOpen(!isIframeOpen)}
-          className="absolute rounded-full top-[50dvh] left-0 transform -translate-x-full bg-gray-300 p-2"
-        >
-          {isIframeOpen ? "→" : "←"}
-        </button>
+        {selectedElement && <div dangerouslySetInnerHTML={{ __html: selectedElement.outerHTML }} />}
+
+        {isSideFrameOpen && (
+          <button
+            tabIndex={undefined}
+            onClick={() => setIsSideFrameOpen(!isSideFrameOpen)}
+            className="absolute rounded-full top-[50dvh] right-0 transform translate-x-full bg-white border border-gray-300 p-4 mr-8"
+          >
+            <ChevronIcon className="fill-gray-500 size-7" />
+          </button>
+        )}
       </div>
     </>
   )

@@ -56,12 +56,12 @@ export const renderAnnotations = (
     const markerAnnotation = new mapkit["MarkerAnnotation"](coord, {
       title: annotation.title,
       subtitle: annotation.subtitle,
-      color: annotation.category === "交通" ? "#3333FF99" : "#ff7777",
+      color: annotation.category === "火事" ? "#ff3333" : "#222222",
       clusteringIdentifier: annotation.clusteringIdentifier,
       collisionMode: mapkit.Annotation.CollisionMode.Rectangle, // Circleの方が良い？
       displayPriority: mapkit.Annotation.DisplayPriority.Low,
       size: annotation.markerImgUrl ? { width: 36, height: 52 } : undefined,
-      glyphText: annotation.category === "交通" ? "🚗" : "🍴",
+      glyphText: annotation.category === "火事" ? "🔥" : "💀",
       data: { id: annotation.id, area: annotation.data.area, link: annotation.data.link },
     })
 
