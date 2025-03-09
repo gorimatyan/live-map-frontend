@@ -1,80 +1,82 @@
-import { AppleMap } from "@/components/AppleMap/AppleMap"
+"use client";
+
+import { AppleMap } from "@/components/AppleMap/AppleMap";
+import { useEffect, useState } from "react";
+import { MapAnnotationData } from "@/utils/type/map/MapAnnotationDataType";
+import { NewsData } from "@/utils/type/api/NewsType";
+import { FireTruckData } from "@/utils/type/api/FireTruckType";
+import { fetchJson } from "@/utils/function/fetchUtil";
+
+const FIRE_API_ENDPOINT = "http://localhost:3001/api/fire-trucks/missions";
+const NEWS_API_ENDPOINT = "http://localhost:3001/api/news";
+
+const mapFireTruckDataToAnnotationData = (fireTruckData: FireTruckData[]): MapAnnotationData[] => {
+  return fireTruckData.map((fireTruck, index) => ({
+    id: Date.now() + index, // 一意なIDを生成
+    category: fireTruck.disasterType,
+    location: { lat: fireTruck.latitude ?? 0, lng: fireTruck.longitude ?? 0 },
+    title: fireTruck.subject,
+    subtitle: fireTruck.body,
+    clusteringIdentifier: fireTruck.disasterType,
+    data: {
+      area: fireTruck.address,
+      link: "",
+    },
+  }));
+};
+
+const mapNewsDataToAnnotationData = (newsData: NewsData[], offset: number): MapAnnotationData[] => {
+  return newsData.map((news, index) => ({
+    id: Date.now() + offset + index, // 一意なIDを生成
+    category: news.category,
+    location: {
+      lat: news.latitude ? parseFloat(news.latitude) : 0,
+      lng: news.longitude ? parseFloat(news.longitude) : 0,
+    },
+    title: news.title,
+    subtitle: news.summary,
+    clusteringIdentifier: news.category,
+    data: {
+      area: news.formattedAddress,
+      link: news.url,
+    },
+  }));
+};
+
 
 export default function Home() {
+  const [mapAnnotationData, setMapAnnotationData] = useState<MapAnnotationData[]>([]);
+
+  // データを取得して変換
+useEffect(() => {
+  const fetchData = async () => {
+    try {
+      const fireTruckResponse = await fetchJson<{ data: FireTruckData[] }>(FIRE_API_ENDPOINT);
+      const newsResponse = await fetchJson<{ data?: NewsData[] }>(NEWS_API_ENDPOINT);
+
+      const fireTruckData = fireTruckResponse.data || [];
+      const newsData = newsResponse.data ?? [];
+
+      const fireTruckAnnotationData = mapFireTruckDataToAnnotationData(fireTruckData);
+      const newsAnnotationData = mapNewsDataToAnnotationData(newsData, fireTruckAnnotationData.length);
+
+      setMapAnnotationData([...fireTruckAnnotationData, ...newsAnnotationData]);
+    } catch (error) {
+      console.error("データの取得に失敗しました", error);
+    }
+  };
+
+    fetchData();
+  }, []);
+
   return (
     <div className="w-full h-[100dvh]">
       <AppleMap
         centerPoint={[33.5902, 130.4017]}
         zoom={12}
         className={"h-full w-full"}
-        mapAnnotationData={[
-          {
-            id: 1,
-            category: "火事",
-            location: { lat: 33.5902, lng: 130.4017 },
-            title: "フロートで沖に流され転落事故、注意喚起！",
-            subtitle: "福岡県福岡市東区 志賀島",
-            clusteringIdentifier: "fukuoka",
-            data: {
-              area: "福岡市中央区",
-              link: "https:\/\/mainichi.jp",
-            },
-            // marker: "/images/m3.webp",
-          },
-          {
-            id: 2,
-            category: "火事",
-            location: { lat: 33.5952, lng: 130.4027 },
-            title: "家が燃えました",
-            subtitle: "福岡市中央区",
-            clusteringIdentifier: "fukuoka",
-            // marker: "/images/m3.webp",
-            data: {
-              area: "福岡市中央区",
-              link: "https://ja.wikipedia.org/wiki/大濠公園",
-            },
-          },
-          {
-            id: 3,
-            category: "殺人",
-            location: { lat: 33.5972, lng: 130.4047 },
-            title: "駅付近で殺人事件",
-            subtitle: "福岡市東区",
-            clusteringIdentifier: "fukuoka",
-            // marker: "/images/m3.webp",
-            data: {
-              area: "福岡市中央区", // クラスターアノテーションで使用
-              link: "https://www.google.com/?igu=1", //
-            },
-          },
-          {
-            id: 4,
-            category: "殺人",
-            location: { lat: 33.6192, lng: 130.4197 },
-            title: "道端で殺人事件",
-            subtitle: "福岡市東区",
-            clusteringIdentifier: "fukuoka",
-            // marker: "/images/m3.webp",
-            data: {
-              area: "福岡市東区",
-              link: "https://www.nishinippon.co.jp/item/o/1324494/",
-            },
-          },
-          {
-            id: 5,
-            category: "殺人",
-            location: { lat: 33.6082, lng: 130.4192 },
-            title: "薬院大通駅で事件発生。",
-            subtitle: "福岡市東区",
-            clusteringIdentifier: "fukuoka",
-            // marker: "/images/m3.webp",
-            data: {
-              area: "福岡市東区",
-              link: "https://ja.wikipedia.org/wiki/薬院大通駅",
-            },
-          },
-        ]}
+        mapAnnotationData={mapAnnotationData}
       />
     </div>
-  )
+  );
 }
