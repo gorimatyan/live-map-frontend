@@ -229,6 +229,9 @@ export const AppleMap = ({
 
       // 普通のアノテーションのクリック時のみ実行
       if (event.annotation?.memberAnnotations == undefined) {
+        // クリックしたマーカーの座標に移動
+        const coordinate = event.annotation.coordinate
+        map.setCenterAnimated(coordinate)
         // アノテーションを選択状態にする
         handleSelect(event.annotation.data?.link, event.annotation.data?.id)
       }
