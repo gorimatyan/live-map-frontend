@@ -62,7 +62,19 @@ export const renderAnnotations = (
       displayPriority: mapkit.Annotation.DisplayPriority.Low,
       size: annotation.markerImgUrl ? { width: 36, height: 52 } : undefined,
       glyphText: annotation.category === "火事" ? "🔥" : "💀",
-      data: { id: annotation.id, area: annotation.data.area, link: annotation.data.link },
+      data: { 
+        id: annotation.id,
+        category: annotation.category,
+        location: annotation.location,
+        title: annotation.title,
+        subtitle: annotation.subtitle,
+        clusteringIdentifier: annotation.clusteringIdentifier,
+        data: {
+          area: annotation.data.area,
+          link: annotation.data.link
+        },
+        markerImgUrl: annotation.markerImgUrl
+      },
     })
 
     // アノテーションをnewAnnotationsに追加
