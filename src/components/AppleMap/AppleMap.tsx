@@ -22,6 +22,8 @@ type AppleMapProps = {
   mapAnnotationData: MapAnnotationData[]
 } & React.HTMLAttributes<HTMLDivElement>
 
+const categories = ["火事", "殺人"]
+
 export const AppleMap = ({
   centerPoint,
   mapOptions = {},
@@ -37,6 +39,45 @@ export const AppleMap = ({
   const [iframeUrl, setIframeUrl] = useState<string | null>(null)
   const [isSideFrameOpen, setIsSideFrameOpen] = useState<boolean>(false)
   const [selectedElement, setSelectedElement] = useState<HTMLElement | null>(null)
+  const [selectedCategories, setSelectedCategories] = useState<string[]>(categories)
+
+  const handleCategoryChange = (category: string) => {
+    setSelectedCategories((prev) =>
+      prev.includes(category) ? prev.filter((c) => c !== category) : [...prev, category]
+    )
+  }
+
+  /**
+   * このuseEffectはカテゴリーが変更されたときの処理。
+   * やってることはアノテーションを全部消して、新しく追加してフィルターで弾かれたやつを消すだけ。
+   */
+  useEffect(() => {
+    if (!mapRef.current) return
+
+    // mapの状態を取得
+    const [map] = mapRef.current
+
+    // 全てのアノテーションを一旦削除
+    const allAnnotations = map.annotations
+    map.removeAnnotations(allAnnotations)
+
+    // 重複を避けるためのannotationRefsも一旦削除
+    annotationRefs.current = {}
+
+    // 全てのアノテーションを追加
+    renderAnnotations(mapRef, annotationRefs, mapAnnotationData)
+
+    // 全てのアノテーションを取得
+    const newAllAnnotations = map.annotations
+
+    // 選択済みのカテゴリーを除外したアノテーションを取得
+    const shouldRemoveAnnotations = newAllAnnotations.filter(
+      (annotation) => !selectedCategories.includes(annotation.data.category)
+    )
+
+    // 全てのアノテーションから選択済みのカテゴリーを除外したアノテーションを削除
+    map.removeAnnotations(shouldRemoveAnnotations)
+  }, [selectedCategories, mapAnnotationData])
 
   useEffect(() => {
     if (!div.current || mapRef.current) {
@@ -45,6 +86,7 @@ export const AppleMap = ({
 
     // Mapkit.jsを読み込んだらマップの初期化を実行
     loadMapkitJs().then((mapkit: MapkitInstance) => {
+      console.log("mapkitがloadされました")
       if (mapRef.current) {
         return
       }
@@ -58,10 +100,6 @@ export const AppleMap = ({
   }, [div])
 
   useEffect(() => {
-    renderAnnotations(mapRef, annotationRefs, mapAnnotationData)
-  }, [mapAnnotationData])
-
-  useEffect(() => {
     setIsSideFrameOpen(!!iframeUrl)
   }, [iframeUrl])
 
@@ -70,7 +108,6 @@ export const AppleMap = ({
       mutations.forEach((mutation) => {
         if (mutation.type === "attributes" && mutation.attributeName === "class") {
           const selectedElement = document.getElementsByClassName(".mk-selected")[0]
-          console.log(`selectedElement`, selectedElement)
           if (selectedElement) {
             setSelectedElement(selectedElement.cloneNode(true) as HTMLElement)
           }
@@ -128,7 +165,6 @@ export const AppleMap = ({
 
       // クラスター（複数のピンがまとまった状態）のアノテーションの設定
       const allAnnotationsCount = clusterAnnotation.memberAnnotations.length
-      console.log(`clusterAnnotation`, clusterAnnotation.memberAnnotations)
 
       const firstArea = clusterAnnotation.memberAnnotations[0].data.area
       const firstTitle = clusterAnnotation.memberAnnotations[0].title
@@ -172,7 +208,6 @@ export const AppleMap = ({
       title.textContent = annotation.title
 
       const link = element.appendChild(document.createElement("a"))
-      console.log(`annotation.data`, annotation.data)
       link.href = annotation.data.link
       link.textContent = annotation.data.area
 
@@ -211,8 +246,6 @@ export const AppleMap = ({
   const _setupEventListeners = (map: MapInstance) => {
     // マーカーをクリックしたときの処理
     map.addEventListener("select", function (event) {
-      console.log("select", event)
-
       if (!event.annotation?.coordinate) {
         return
       }
@@ -241,7 +274,6 @@ export const AppleMap = ({
 
     // マーカーを選択解除したときの処理
     map.addEventListener("deselect", function (event) {
-      console.log("deselect", event)
       handleDeselect()
       setSelectedElement(null)
       const annotationKey = event.annotation?.data.id
@@ -254,7 +286,6 @@ export const AppleMap = ({
     if (onBoundsChanged) {
       onBoundsChanged(toCompatibleBounds(map.region.toBoundingRegion()))
       map.addEventListener("region-change-end", function (event) {
-        console.log("Region Change ended", event)
         onBoundsChanged(toCompatibleBounds(event.target.region.toBoundingRegion()))
       })
     }
@@ -279,6 +310,18 @@ export const AppleMap = ({
   return (
     <>
       <div ref={div} className={className} {...props} />
+      <div>
+        {categories.map((category) => (
+          <label key={category}>
+            <input
+              type="checkbox"
+              checked={selectedCategories.includes(category)}
+              onChange={() => handleCategoryChange(category)}
+            />
+            {category}
+          </label>
+        ))}
+      </div>
       <div
         className={`fixed top-0 left-0 h-full bg-white shadow-lg transition-transform ${
           isSideFrameOpen ? "w-5/6 translate-x-0" : "w-0 -translate-x-full"
