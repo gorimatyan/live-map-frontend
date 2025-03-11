@@ -12,6 +12,7 @@ import { toCompatibleBounds } from "@/utils/function/map/toCompatibleBounds"
 import { ChevronIcon } from "../Icons/ChevronIcon"
 import { fetchJson } from "@/utils/function/fetchUtil"
 import { TweetData } from "@/utils/type/api/TweetType"
+import { formatTweetQueryParams } from "@/utils/function/formatTweetQueryParams"
 
 type AppleMapProps = {
   centerPoint: [number, number]
@@ -91,35 +92,6 @@ export const AppleMap = ({
     }
   }, [])
 
-  const dummyTweets: TweetData[] = [
-    {
-      id: "1",
-      text: "🔥 西区で火災発生！消防隊が出動中。",
-      createdAt: new Date().toISOString(),
-      authorId: "123456",
-      authorName: "NewsBot",
-      authorProfile: "https://via.placeholder.com/50",
-      mediaUrl: null
-    },
-    {
-      id: "2",
-      text: "🚑 救急車が須崎町で対応中。",
-      createdAt: new Date().toISOString(),
-      authorId: "789012",
-      authorName: "EmergencyReport",
-      authorProfile: "https://via.placeholder.com/50",
-      mediaUrl: null
-    },
-    {
-      id: "3",
-      text: "📢 重要なお知らせ：博多区で交通事故発生。",
-      createdAt: new Date().toISOString(),
-      authorId: "345678",
-      authorName: "LocalSafety",
-      authorProfile: "https://via.placeholder.com/50",
-      mediaUrl: "https://via.placeholder.com/100"
-    }
-  ];
 
   /**
    * マップを初期化する関数
@@ -302,57 +274,34 @@ export const AppleMap = ({
     }
   
     try {
-      // console.log(`🔍 APIからツイートを取得: ${data.id}`);
+      console.log(`🔍 APIからツイートを取得: ${data.id}`);
 
-      // const areaParts = data.data.area
-      //   .split(/[\s　,]+/) // 空白、全角スペース、カンマで分割
-      //   .map(part => part.trim()) // 前後のスペースを除去
-      //   .filter(part => part.length > 1); // 1文字だけのものは削除（例: "区" だけなど）
+      // 📌 `formatTweetQueryParams` を使って検索クエリを作成
+      const groupsParam = formatTweetQueryParams(data);
 
-      // // クエリパラメータの作成
-      // const andGroups: string[] = [];
+      // 📌 APIリクエストを送る
+      const apiUrl = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/twitter/tweets?groups=${encodeURIComponent(groupsParam)}`;
+      console.log(`🚀 APIリクエスト: ${apiUrl}`);
 
-      // // カテゴリ + 各エリアのAND検索パターンを作成
-      // if (areaParts.length > 0) {
-      //   areaParts.forEach(area => {
-      //     andGroups.push(`${data.category},${area}`); // 例: "火災,西区"
-      //   });
-      // } else {
-      //   andGroups.push(data.category); // エリア情報なしの場合
-      // }
+      const res = await fetchJson<{ data?: TweetData[]; error?: string }>(apiUrl);
 
-      // // `URLSearchParams` を使ってクエリを作成
-      // const queryParams = new URLSearchParams();
-      // queryParams.append("andGroups", andGroups.join("|")); // `|` を区切りとして1つのパラメータにまとめる
+      if (res.error) {
+          console.error("❌ Twitterデータの取得に失敗:", res.error);
+          setError("Twitterデータの取得に失敗しました。");
+          return;
+      }
 
-      // // APIリクエストを送る
-      // const apiUrl = `http://localhost:3001/api/twitter/tweets?${queryParams.toString()}`;
-      // console.log(`🚀 APIリクエスト: ${apiUrl}`);
+      if (res.data) {
+          console.log("✅ 取得したツイート:", res.data);
 
-
-      // const res = await fetchJson<{ data?: TweetData[]; error?: string }>(apiUrl);
-
-      // if (res.error) {
-      //   console.error("❌ Twitterデータの取得に失敗しました:", res.error);
-      //   setError("Twitterデータの取得に失敗しました。");
-      //   return;
-      // }
-      setTweets(dummyTweets); 
-      // if (res.data) {
-      //   console.log("✅ 取得したツイート:", res.data);
-
-      //   // // キャッシュに保存 & ステート更新
-      //   // setTweetsCache(prev => ({
-      //   //   ...prev,
-      //   //   [data.id]: res.data ?? [],
-      //   // }));
-      //   console.warn("⚠️ 仮のツイートデータを使用します");
-      //   setTweets(dummyTweets);  
-      // }
-    } catch (error) {
+          // 📌 キャッシュに保存 & ステート更新
+          setTweetsCache(prev => ({ ...prev, [data.id]: res.data ?? [] }));
+          setTweets(res.data);
+      }
+  } catch (error) {
       console.error("❌ API呼び出しエラー:", error instanceof Error ? error.message : error);
       setError("API呼び出しエラーが発生しました。");
-    }
+  }
 };
 
 
@@ -412,12 +361,6 @@ export const AppleMap = ({
               </div>
             )}
 
-            {selectedAnnotation.subtitle && (
-              <div className="mb-4">
-                <h3 className="font-semibold text-lg text-gray-700">サブタイトル</h3>
-                <p className="text-gray-900">{selectedAnnotation.subtitle}</p>
-              </div>
-            )}
 
             {selectedAnnotation.markerImgUrl && (
               <div className="mb-4">

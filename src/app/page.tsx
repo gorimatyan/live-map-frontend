@@ -5,8 +5,8 @@ import { useEffect, useState } from "react";
 import { MapAnnotationData } from "@/utils/type/map/MapAnnotationDataType";
 import { fetchJson } from "@/utils/function/fetchUtil";
 
-const FIRE_API_ENDPOINT = "http://localhost:3001/api/fire-trucks/missions";
-const NEWS_API_ENDPOINT = "http://localhost:3001/api/news";
+const FIRE_API_ENDPOINT = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/fire-trucks/missions`;
+const NEWS_API_ENDPOINT = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/news`;
 
 
 export default function Home() {

@@ -6,4 +6,5 @@ export interface TweetData {
     authorName?: string | null;
     authorProfile?: string | null;
     mediaUrl?: string | null;
+    tweetUrl?: string | null;
 }
