@@ -8,8 +8,8 @@ export type MapAnnotationData = {
   title: string // ニュースのタイトル
   summary: string // ニュースの要約
   contentBody: string // ニュースの本文
-  sourceName: string|null // ニュースの発信元
-  sourceUrl: string|null // 発信元のURL
+  sourceName: string | null // ニュースの発信元
+  sourceUrl: string | null // 発信元のURL
   clusteringIdentifier: string
   data: {
     area: string

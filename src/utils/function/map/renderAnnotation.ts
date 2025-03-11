@@ -17,7 +17,6 @@ export const renderAnnotations = (
 
   const newAnnotations = []
   const [map, mapkit]: [MapInstance, MapkitInstance] = mapRef.current
-
   for (const annotation of annotationData) {
     if (!annotation.id) {
       throw new Error("Marker must have a id.")
@@ -55,25 +54,26 @@ export const renderAnnotations = (
     // MarkerAnnotationの場合
     const markerAnnotation = new mapkit["MarkerAnnotation"](coord, {
       title: annotation.title,
-      subtitle: annotation.subtitle,
+      subtitle: annotation.summary,
       color: annotation.category === "火事" ? "#ff3333" : "#222222",
       clusteringIdentifier: annotation.clusteringIdentifier,
       collisionMode: mapkit.Annotation.CollisionMode.Rectangle, // Circleの方が良い？
       displayPriority: mapkit.Annotation.DisplayPriority.Low,
       size: annotation.markerImgUrl ? { width: 36, height: 52 } : undefined,
       glyphText: annotation.category === "火事" ? "🔥" : "💀",
-      data: { 
+      data: {
         id: annotation.id,
         category: annotation.category,
         location: annotation.location,
         title: annotation.title,
-        subtitle: annotation.subtitle,
+        subtitle: annotation.summary,
         clusteringIdentifier: annotation.clusteringIdentifier,
         data: {
           area: annotation.data.area,
-          link: annotation.data.link
+          link: annotation.data.link,
+          category: annotation.category,
         },
-        markerImgUrl: annotation.markerImgUrl
+        markerImgUrl: annotation.markerImgUrl,
       },
     })
 

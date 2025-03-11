@@ -25,6 +25,8 @@ type AppleMapProps = {
   mapAnnotationData: MapAnnotationData[]
 } & React.HTMLAttributes<HTMLDivElement>
 
+const categories = ["火事", "殺人"]
+
 export const AppleMap = ({
   centerPoint,
   mapOptions = {},
@@ -40,10 +42,49 @@ export const AppleMap = ({
   const [iframeUrl, setIframeUrl] = useState<string | null>(null)
   const [isSideFrameOpen, setIsSideFrameOpen] = useState<boolean>(false)
   const [selectedElement, setSelectedElement] = useState<HTMLElement | null>(null)
-  const [selectedAnnotation, setSelectedAnnotation] = useState<MapAnnotationData | null>(null);
-  const [tweetsCache, setTweetsCache] = useState<Record<number, TweetData[]>>({});
-  const [tweets, setTweets] = useState<TweetData[] | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [selectedAnnotation, setSelectedAnnotation] = useState<MapAnnotationData | null>(null)
+  const [tweetsCache, setTweetsCache] = useState<Record<number, TweetData[]>>({})
+  const [tweets, setTweets] = useState<TweetData[] | null>(null)
+  const [selectedCategories, setSelectedCategories] = useState<string[]>(categories)
+
+  const handleCategoryChange = (category: string) => {
+    setSelectedCategories((prev) =>
+      prev.includes(category) ? prev.filter((c) => c !== category) : [...prev, category]
+    )
+  }
+
+  /**
+   * このuseEffectはカテゴリーが変更されたときの処理。
+   * やってることはアノテーションを全部消して、新しく追加してフィルターで弾かれたやつを消すだけ。
+   */
+  useEffect(() => {
+    if (!mapRef.current) return
+
+    // mapの状態を取得
+    const [map] = mapRef.current
+
+    // 全てのアノテーションを一旦削除
+    const allAnnotations = map.annotations
+    map.removeAnnotations(allAnnotations)
+
+    // 重複を避けるためのannotationRefsも一旦削除
+    annotationRefs.current = {}
+
+    // 全てのアノテーションを追加
+    renderAnnotations(mapRef, annotationRefs, mapAnnotationData)
+
+    // 全てのアノテーションを取得
+    const newAllAnnotations = map.annotations
+
+    // 選択済みのカテゴリーを除外したアノテーションを取得
+    const shouldRemoveAnnotations = newAllAnnotations.filter(
+      (annotation) => !selectedCategories.includes(annotation.data.category)
+    )
+
+    // 全てのアノテーションから選択済みのカテゴリーを除外したアノテーションを削除
+    map.removeAnnotations(shouldRemoveAnnotations)
+  }, [selectedCategories, mapAnnotationData])
+
   useEffect(() => {
     if (!div.current || mapRef.current) {
       return
@@ -51,6 +92,7 @@ export const AppleMap = ({
 
     // Mapkit.jsを読み込んだらマップの初期化を実行
     loadMapkitJs().then((mapkit: MapkitInstance) => {
+      console.log("mapkitがloadされました")
       if (mapRef.current) {
         return
       }
@@ -68,7 +110,7 @@ export const AppleMap = ({
   }, [mapAnnotationData])
 
   useEffect(() => {
-    setIsSideFrameOpen(!!selectedAnnotation);
+    setIsSideFrameOpen(!!selectedAnnotation)
   }, [selectedAnnotation])
 
   useEffect(() => {
@@ -76,7 +118,6 @@ export const AppleMap = ({
       mutations.forEach((mutation) => {
         if (mutation.type === "attributes" && mutation.attributeName === "class") {
           const selectedElement = document.getElementsByClassName(".mk-selected")[0]
-          console.log(`selectedElement`, selectedElement)
           if (selectedElement) {
             setSelectedElement(selectedElement.cloneNode(true) as HTMLElement)
           }
@@ -91,7 +132,6 @@ export const AppleMap = ({
       observer.disconnect()
     }
   }, [])
-
 
   /**
    * マップを初期化する関数
@@ -135,7 +175,6 @@ export const AppleMap = ({
 
       // クラスター（複数のピンがまとまった状態）のアノテーションの設定
       const allAnnotationsCount = clusterAnnotation.memberAnnotations.length
-      console.log(`clusterAnnotation`, clusterAnnotation.memberAnnotations)
 
       const firstArea = clusterAnnotation.memberAnnotations[0].data.area
       const firstTitle = clusterAnnotation.memberAnnotations[0].title
@@ -179,7 +218,6 @@ export const AppleMap = ({
       title.textContent = annotation.title
 
       const link = element.appendChild(document.createElement("a"))
-      console.log(`annotation.data`, annotation.data)
       link.href = annotation.data.link
       link.textContent = annotation.data.area
 
@@ -218,12 +256,10 @@ export const AppleMap = ({
   const _setupEventListeners = (map: MapInstance) => {
     // マーカーをクリックしたときの処理
     map.addEventListener("select", async (event) => {
-      console.log("select", event)
-    
       if (!event.annotation?.coordinate) {
         return
       }
-    
+
       if (event.annotation?.memberAnnotations != undefined) {
         const coordinate = event.annotation.coordinate
         const span = new mapkit.CoordinateSpan(0.025, 0.025)
@@ -231,17 +267,16 @@ export const AppleMap = ({
         map.setRegionAnimated(region)
         return
       }
-    
+
       if (event.annotation?.data) {
-        await handleSelect(event.annotation.data);
+        await handleSelect(event.annotation.data)
       }
-    
+
       annotationRefs.current[event.annotation.data?.id]?.onClick?.()
     })
 
     // マーカーを選択解除したときの処理
     map.addEventListener("deselect", function (event) {
-      console.log("deselect", event)
       handleDeselect()
       setSelectedElement(null)
       const annotationKey = event.annotation?.data.id
@@ -254,68 +289,75 @@ export const AppleMap = ({
     if (onBoundsChanged) {
       onBoundsChanged(toCompatibleBounds(map.region.toBoundingRegion()))
       map.addEventListener("region-change-end", function (event) {
-        console.log("Region Change ended", event)
         onBoundsChanged(toCompatibleBounds(event.target.region.toBoundingRegion()))
       })
     }
   }
 
   const handleSelect = async (data: MapAnnotationData) => {
-    setSelectedAnnotation(data);
-    setIsSideFrameOpen(true);
-    setError(null); // エラーをリセット
-    setTweets(null); // 前回のツイート情報をクリア
-  
+    setSelectedAnnotation(data)
+    setIsSideFrameOpen(true)
+    setTweets(null) // 前回のツイート情報をクリア
+
     // キャッシュがあれば、それを利用
     if (tweetsCache[data.id]) {
-      console.log(`📌 キャッシュからツイートを取得: ${data.id}`);
-      setTweets(tweetsCache[data.id]);
-      return;
+      console.log(`📌 キャッシュからツイートを取得: ${data.id}`)
+      setTweets(tweetsCache[data.id])
+      return
     }
-  
+
     try {
-      console.log(`🔍 APIからツイートを取得: ${data.id}`);
+      console.log(`🔍 APIからツイートを取得: ${data.id}`)
 
       // 📌 `formatTweetQueryParams` を使って検索クエリを作成
-      const groupsParam = formatTweetQueryParams(data);
+      const groupsParam = formatTweetQueryParams(data)
 
       // 📌 APIリクエストを送る
-      const apiUrl = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/twitter/tweets?groups=${encodeURIComponent(groupsParam)}`;
-      console.log(`🚀 APIリクエスト: ${apiUrl}`);
+      const apiUrl = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/twitter/tweets?groups=${encodeURIComponent(groupsParam)}`
+      console.log(`🚀 APIリクエスト: ${apiUrl}`)
 
-      const res = await fetchJson<{ data?: TweetData[]; error?: string }>(apiUrl);
+      const res = await fetchJson<{ data?: TweetData[]; error?: string }>(apiUrl)
 
       if (res.error) {
-          console.error("❌ Twitterデータの取得に失敗:", res.error);
-          setError("Twitterデータの取得に失敗しました。");
-          return;
+        console.error("❌ Twitterデータの取得に失敗:", res.error)
+        return
       }
 
       if (res.data) {
-          console.log("✅ 取得したツイート:", res.data);
+        console.log("✅ 取得したツイート:", res.data)
 
-          // 📌 キャッシュに保存 & ステート更新
-          setTweetsCache(prev => ({ ...prev, [data.id]: res.data ?? [] }));
-          setTweets(res.data);
+        // 📌 キャッシュに保存 & ステート更新
+        setTweetsCache((prev) => ({ ...prev, [data.id]: res.data ?? [] }))
+        setTweets(res.data)
       }
-  } catch (error) {
-      console.error("❌ API呼び出しエラー:", error instanceof Error ? error.message : error);
-      setError("API呼び出しエラーが発生しました。");
+    } catch (error) {
+      console.error("❌ API呼び出しエラー:", error instanceof Error ? error.message : error)
+    }
   }
-};
-
 
   /**
    * マーカーを選択解除したときの処理
    */
   const handleDeselect = () => {
     setIframeUrl(null)
-    setSelectedAnnotation(null);
+    setSelectedAnnotation(null)
   }
 
   return (
     <>
       <div ref={div} className={className} {...props} />
+      <div>
+        {categories.map((category) => (
+          <label key={category}>
+            <input
+              type="checkbox"
+              checked={selectedCategories.includes(category)}
+              onChange={() => handleCategoryChange(category)}
+            />
+            {category}
+          </label>
+        ))}
+      </div>
       {/* 詳細画面の幅を決める */}
       <div
         className={`fixed top-0 left-0 h-full bg-white shadow-lg transition-transform ${
@@ -323,7 +365,7 @@ export const AppleMap = ({
         }`}
       >
         {selectedElement && <div dangerouslySetInnerHTML={{ __html: selectedElement.outerHTML }} />}
-  
+
         {isSideFrameOpen && (
           <button
             tabIndex={undefined}
@@ -333,7 +375,7 @@ export const AppleMap = ({
             <ChevronIcon className="fill-gray-500 size-7" />
           </button>
         )}
-  
+
         {/* ↓↓↓ ココに書く ↓↓↓ */}
         {isSideFrameOpen && selectedAnnotation && (
           <div className="p-6 overflow-y-auto h-full">
@@ -360,7 +402,6 @@ export const AppleMap = ({
                 <p className="text-gray-900">{selectedAnnotation.title}</p>
               </div>
             )}
-
 
             {selectedAnnotation.markerImgUrl && (
               <div className="mb-4">
@@ -399,7 +440,9 @@ export const AppleMap = ({
                     >
                       {/* プロフィール画像 */}
                       <img
-                        src={"https://abs.twimg.com/sticky/default_profile_images/default_profile_normal.png"}
+                        src={
+                          "https://abs.twimg.com/sticky/default_profile_images/default_profile_normal.png"
+                        }
                         alt="Profile"
                         className="w-12 h-12 rounded-full"
                       />
@@ -415,7 +458,9 @@ export const AppleMap = ({
                         </div>
 
                         {/* ツイート本文（大きめ＆余白増やす） */}
-                        <p className="mt-2 text-lg text-gray-900 whitespace-pre-line">{tweet.text}</p>
+                        <p className="mt-2 text-lg text-gray-900 whitespace-pre-line">
+                          {tweet.text}
+                        </p>
 
                         {/* メディア（画像をより大きく） */}
                         {tweet.mediaUrl && (
@@ -429,15 +474,35 @@ export const AppleMap = ({
                         {/* いいね・リツイート風デザイン（余白大きく） */}
                         <div className="mt-4 flex space-x-6 text-gray-500 text-sm">
                           <button className="hover:text-blue-500 flex items-center space-x-2">
-                            <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" d="M14 9l-4 4m0 0l-4-4m4 4V3"></path>
+                            <svg
+                              className="w-5 h-5"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                d="M14 9l-4 4m0 0l-4-4m4 4V3"
+                              ></path>
                             </svg>
                             <span>リツイート</span>
                           </button>
 
                           <button className="hover:text-red-500 flex items-center space-x-2">
-                            <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" d="M5 15l7-7 7 7"></path>
+                            <svg
+                              className="w-5 h-5"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                d="M5 15l7-7 7 7"
+                              ></path>
                             </svg>
                             <span>いいね</span>
                           </button>
