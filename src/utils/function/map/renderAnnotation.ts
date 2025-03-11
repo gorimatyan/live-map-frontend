@@ -4,6 +4,7 @@ import {
   MapkitInstance,
 } from "@/utils/type/map/MapAnnotationDataType"
 import { RefObject } from "react"
+import { categoryStyleMap } from "./categoryStyleMap"
 
 // マーカーの表示をする関数
 export const renderAnnotations = (
@@ -56,19 +57,19 @@ export const renderAnnotations = (
     const markerAnnotation = new mapkit["MarkerAnnotation"](coord, {
       title: annotation.title,
       subtitle: annotation.summary,
-      color: annotation.category === "火事" ? "#ff3333" : "#222222",
-      clusteringIdentifier: annotation.clusteringIdentifier,
+      color: categoryStyleMap[annotation.category]?.color || "#222222", // デフォルトの色を設定
+      clusteringIdentifier: "default",
       collisionMode: mapkit.Annotation.CollisionMode.Rectangle, // Circleの方が良い？
       displayPriority: mapkit.Annotation.DisplayPriority.Low,
       size: annotation.markerImgUrl ? { width: 36, height: 52 } : undefined,
-      glyphText: annotation.category === "火事" ? "🔥" : "💀",
+      glyphText: categoryStyleMap[annotation.category]?.emoji || "❓", // デフォルトの絵文字を設定
       data: {
         id: annotation.id,
         category: annotation.category,
         location: annotation.location,
         title: annotation.title,
         subtitle: annotation.summary,
-        clusteringIdentifier: annotation.clusteringIdentifier,
+        // clusteringIdentifier: annotation.clusteringIdentifier,
         data: {
           area: annotation.data.area,
           link: annotation.data.link,
