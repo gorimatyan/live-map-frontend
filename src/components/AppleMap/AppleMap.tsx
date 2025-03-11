@@ -10,6 +10,9 @@ import { renderAnnotations } from "@/utils/function/map/renderAnnotation"
 import { loadMapkitJs } from "@/utils/function/map/loadMapkitJs"
 import { toCompatibleBounds } from "@/utils/function/map/toCompatibleBounds"
 import { ChevronIcon } from "../Icons/ChevronIcon"
+import { fetchJson } from "@/utils/function/fetchUtil"
+import { TweetData } from "@/utils/type/api/TweetType"
+import { formatTweetQueryParams } from "@/utils/function/formatTweetQueryParams"
 
 type AppleMapProps = {
   centerPoint: [number, number]
@@ -22,7 +25,7 @@ type AppleMapProps = {
   mapAnnotationData: MapAnnotationData[]
 } & React.HTMLAttributes<HTMLDivElement>
 
-const categories = ["火事", "殺人"]
+const categories = ["火災", "殺人", "救急", "警戒", "ハッカソン", "その他"]
 
 export const AppleMap = ({
   centerPoint,
@@ -39,6 +42,10 @@ export const AppleMap = ({
   const [iframeUrl, setIframeUrl] = useState<string | null>(null)
   const [isSideFrameOpen, setIsSideFrameOpen] = useState<boolean>(false)
   const [selectedElement, setSelectedElement] = useState<HTMLElement | null>(null)
+  const [selectedAnnotation, setSelectedAnnotation] = useState<MapAnnotationData | null>(null)
+  const [tweetsCache, setTweetsCache] = useState<Record<number, TweetData[]>>({})
+  const [tweets, setTweets] = useState<TweetData[] | null>(null)
+  const [error, setError] = useState<string | null>(null)
   const [selectedCategories, setSelectedCategories] = useState<string[]>(categories)
 
   const handleCategoryChange = (category: string) => {
@@ -100,8 +107,8 @@ export const AppleMap = ({
   }, [div])
 
   useEffect(() => {
-    setIsSideFrameOpen(!!iframeUrl)
-  }, [iframeUrl])
+    setIsSideFrameOpen(!!selectedAnnotation)
+  }, [selectedAnnotation])
 
   useEffect(() => {
     const observer = new MutationObserver((mutations) => {
@@ -245,28 +252,24 @@ export const AppleMap = ({
    */
   const _setupEventListeners = (map: MapInstance) => {
     // マーカーをクリックしたときの処理
-    map.addEventListener("select", function (event) {
+    map.addEventListener("select", async function (event) {
       if (!event.annotation?.coordinate) {
         return
       }
 
-      // クラスターアノテーションのクリック時のみ実行
+      // クリックしたマーカーの座標を取得して拡大表示する
+      const coordinate = event.annotation.coordinate
+      const span = new mapkit.CoordinateSpan(0.01, 0.01)
+      const region = new mapkit.CoordinateRegion(coordinate, span)
+      map.setRegionAnimated(region)
+
+      // クラスターアノテーションをクリックの場合は処理を中断
       if (event.annotation?.memberAnnotations != undefined) {
-        // クリックしたクラスターアノテーションの座標にズームする
-        const coordinate = event.annotation.coordinate
-        const span = new mapkit.CoordinateSpan(0.025, 0.025)
-        const region = new mapkit.CoordinateRegion(coordinate, span)
-        map.setRegionAnimated(region)
         return
       }
 
-      // 普通のアノテーションのクリック時のみ実行
-      if (event.annotation?.memberAnnotations == undefined) {
-        // クリックしたマーカーの座標に移動
-        const coordinate = event.annotation.coordinate
-        map.setCenterAnimated(coordinate)
-        // アノテーションを選択状態にする
-        handleSelect(event.annotation.data?.link, event.annotation.data?.id)
+      if (event.annotation?.data) {
+        await handleSelect(event.annotation.data)
       }
 
       annotationRefs.current[event.annotation.data?.id]?.onClick?.()
@@ -291,13 +294,48 @@ export const AppleMap = ({
     }
   }
 
-  /**
-   * マーカーをクリックしたときの処理
-   * @param url クリックしたマーカーのURL
-   * @param id クリックしたマーカーのID
-   */
-  const handleSelect = (url: string | null, id: number | null) => {
-    setIframeUrl(url)
+  const handleSelect = async (data: MapAnnotationData) => {
+    setSelectedAnnotation(data)
+    setIsSideFrameOpen(true)
+    setError(null) // エラーをリセット
+    setTweets(null) // 前回のツイート情報をクリア
+
+    // キャッシュがあれば、それを利用
+    if (tweetsCache[data.id]) {
+      console.log(`📌 キャッシュからツイートを取得: ${data.id}`)
+      setTweets(tweetsCache[data.id])
+      return
+    }
+
+    try {
+      console.log(`🔍 APIからツイートを取得: ${data.id}`)
+
+      // 📌 `formatTweetQueryParams` を使って検索クエリを作成
+      const groupsParam = formatTweetQueryParams(data)
+
+      // 📌 APIリクエストを送る
+      const apiUrl = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/twitter/tweets?groups=${encodeURIComponent(groupsParam)}`
+      console.log(`🚀 APIリクエスト: ${apiUrl}`)
+
+      const res = await fetchJson<{ data?: TweetData[]; error?: string }>(apiUrl)
+
+      if (res.error) {
+        console.error("❌ Twitterデータの取得に失敗:", res.error)
+        setError("Twitterデータの取得に失敗しました。")
+        return
+      }
+
+      if (res.data) {
+        console.log("✅ 取得したツイート:", res.data)
+
+        // 📌 キャッシュに保存 & ステート更新
+        setTweetsCache((prev) => ({ ...prev, [data.id]: res.data ?? [] }))
+        setTweets(res.data)
+      }
+    } catch (error) {
+      console.error("❌ API呼び出しエラー:", error instanceof Error ? error.message : error)
+      setError("API呼び出しエラーが発生しました。")
+    }
   }
 
   /**
@@ -305,6 +343,7 @@ export const AppleMap = ({
    */
   const handleDeselect = () => {
     setIframeUrl(null)
+    setSelectedAnnotation(null)
   }
 
   return (
@@ -324,7 +363,7 @@ export const AppleMap = ({
       </div>
       <div
         className={`fixed top-0 left-0 h-full bg-white shadow-lg transition-transform ${
-          isSideFrameOpen ? "w-5/6 translate-x-0" : "w-0 -translate-x-full"
+          isSideFrameOpen ? "w-1/3 translate-x-0" : "w-0 -translate-x-full"
         }`}
       >
         {selectedElement && <div dangerouslySetInnerHTML={{ __html: selectedElement.outerHTML }} />}
@@ -337,6 +376,148 @@ export const AppleMap = ({
           >
             <ChevronIcon className="fill-gray-500 size-7" />
           </button>
+        )}
+
+        {/* ↓↓↓ ココに書く ↓↓↓ */}
+        {isSideFrameOpen && selectedAnnotation && (
+          <div className="p-6 overflow-y-auto h-full">
+            <h2 className="text-2xl font-bold mb-4 border-b pb-2">📍詳細情報</h2>
+
+            <div className="mb-4">
+              <h3 className="font-semibold text-lg text-gray-700">カテゴリ</h3>
+              <p className="text-gray-900">{selectedAnnotation.category}</p>
+            </div>
+
+            <div className="mb-4">
+              <h3 className="font-semibold text-lg text-gray-700">エリア情報</h3>
+              <p className="text-gray-900">{selectedAnnotation.data.area}</p>
+            </div>
+
+            <div className="mb-4">
+              <h3 className="font-semibold text-lg text-gray-700">クラスター識別子</h3>
+              <p className="text-gray-900">{selectedAnnotation.clusteringIdentifier}</p>
+            </div>
+
+            {selectedAnnotation.title && (
+              <div className="mb-4">
+                <h3 className="font-semibold text-lg text-gray-700">タイトル</h3>
+                <p className="text-gray-900">{selectedAnnotation.title}</p>
+              </div>
+            )}
+
+            {selectedAnnotation.markerImgUrl && (
+              <div className="mb-4">
+                <h3 className="font-semibold text-lg text-gray-700 mb-2">画像</h3>
+                <img
+                  src={selectedAnnotation.markerImgUrl}
+                  alt="マーカー画像"
+                  className="rounded-md shadow-md w-full max-w-xs"
+                />
+              </div>
+            )}
+
+            {selectedAnnotation.data.link && (
+              <div className="mt-6">
+                <a
+                  href={selectedAnnotation.data.link}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-block bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md transition"
+                >
+                  詳細ページへ →
+                </a>
+              </div>
+            )}
+            {/* 🔥 ツイート一覧の表示 */}
+            <div className="mt-6">
+              <h3 className="text-lg font-semibold border-b pb-2">📢 関連ツイート</h3>
+              {tweets === null ? (
+                <p>データを取得中...</p>
+              ) : tweets.length > 0 ? (
+                <div className="mt-2 space-y-6">
+                  {tweets.map((tweet, index) => (
+                    <div
+                      key={index}
+                      className="border border-blue-200 p-5 rounded-lg bg-blue-50 shadow-md flex items-start space-x-4"
+                    >
+                      {/* プロフィール画像 */}
+                      <img
+                        src={
+                          "https://abs.twimg.com/sticky/default_profile_images/default_profile_normal.png"
+                        }
+                        alt="Profile"
+                        className="w-12 h-12 rounded-full"
+                      />
+
+                      <div className="flex-1">
+                        {/* ユーザー情報 */}
+                        <div className="flex items-center space-x-2">
+                          <span className="font-semibold text-gray-900">{tweet.authorName}</span>
+                          <span className="text-gray-500 text-sm">@{tweet.authorId}</span>
+                          <span className="text-gray-400 text-xs">
+                            {new Date(tweet.createdAt).toLocaleString()}
+                          </span>
+                        </div>
+
+                        {/* ツイート本文（大きめ＆余白増やす） */}
+                        <p className="mt-2 text-lg text-gray-900 whitespace-pre-line">
+                          {tweet.text}
+                        </p>
+
+                        {/* メディア（画像をより大きく） */}
+                        {tweet.mediaUrl && (
+                          <img
+                            src={tweet.mediaUrl}
+                            alt="Tweet media"
+                            className="mt-4 rounded-lg border w-full max-w-sm"
+                          />
+                        )}
+
+                        {/* いいね・リツイート風デザイン（余白大きく） */}
+                        <div className="mt-4 flex space-x-6 text-gray-500 text-sm">
+                          <button className="hover:text-blue-500 flex items-center space-x-2">
+                            <svg
+                              className="w-5 h-5"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                d="M14 9l-4 4m0 0l-4-4m4 4V3"
+                              ></path>
+                            </svg>
+                            <span>リツイート</span>
+                          </button>
+
+                          <button className="hover:text-red-500 flex items-center space-x-2">
+                            <svg
+                              className="w-5 h-5"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                d="M5 15l7-7 7 7"
+                              ></path>
+                            </svg>
+                            <span>いいね</span>
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p>関連ツイートはありません。</p>
+              )}
+            </div>
+          </div>
         )}
       </div>
     </>
