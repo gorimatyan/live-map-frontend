@@ -13,6 +13,8 @@ import { ChevronIcon } from "../Icons/ChevronIcon"
 import { fetchJson } from "@/utils/function/fetchUtil"
 import { TweetData } from "@/utils/type/api/TweetType"
 import { formatTweetQueryParams } from "@/utils/function/formatTweetQueryParams"
+import NewPointsList from "./NewPointsList";
+import { HamburgerIcon } from "@/components/Icons/HamburgerIcon";
 
 type AppleMapProps = {
   centerPoint: [number, number]
@@ -47,6 +49,7 @@ export const AppleMap = ({
   const [tweets, setTweets] = useState<TweetData[] | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [selectedCategories, setSelectedCategories] = useState<string[]>(categories)
+  const [isListOpen, setIsListOpen] = useState(false);
 
   const handleCategoryChange = (category: string) => {
     setSelectedCategories((prev) =>
@@ -129,6 +132,34 @@ export const AppleMap = ({
       observer.disconnect()
     }
   }, [])
+
+  /**
+   * マップを指定のアノテーションに移動する関数
+   * @param annotation 
+   * @returns 
+   */
+  const moveMapToAnnotation = (annotation: MapAnnotationData) => {
+    if (!mapRef.current) {
+      return;
+    }
+  
+    const [map, mapkit] = mapRef.current;
+  
+    if (!annotation || !annotation.location) {
+      return;
+    }
+  
+    // 📌 指定の座標へマップを移動（スムーズなアニメーション付き）
+    const coordinate = new mapkit.Coordinate(
+      Number(annotation.location.lat),
+      Number(annotation.location.lng)
+    );
+  
+    const span = new mapkit.CoordinateSpan(0.01, 0.01); // 📌 拡大率を調整
+    const region = new mapkit.CoordinateRegion(coordinate, span);
+  
+    map.setRegionAnimated(region);
+  };
 
   /**
    * マップを初期化する関数
@@ -348,18 +379,48 @@ export const AppleMap = ({
 
   return (
     <>
-      <div ref={div} className={className} {...props} />
-      <div>
-        {categories.map((category) => (
-          <label key={category}>
-            <input
-              type="checkbox"
-              checked={selectedCategories.includes(category)}
-              onChange={() => handleCategoryChange(category)}
-            />
-            {category}
-          </label>
-        ))}
+          <div ref={div} className={className} {...props} />
+      
+      <div className="relative">
+        {/* 📌 右下のハンバーガーボタン */}
+        <button
+          className="fixed bottom-16 right-5 bg-white p-3 rounded-full shadow-lg border border-gray-300 z-50"
+          onClick={() => setIsListOpen(!isListOpen)}
+        >
+          <HamburgerIcon className="w-6 h-6 text-gray-600" />
+        </button>
+
+        {/* 📌 右側スライドパネル（幅を狭めた & デザイン統一） */}
+        <div
+          className={`fixed top-0 right-0 h-full bg-white shadow-lg transition-transform ${
+            isListOpen ? "w-1/4 translate-x-0" : "w-0 translate-x-full"
+          }`}
+        >
+          {isListOpen && (
+            <>
+              {/* 📌 閉じるボタン */}
+              <button
+                className="absolute rounded-full top-1/2 left-[-27px] transform -translate-y-1/2 bg-white border border-gray-300 p-3 shadow-lg"
+                onClick={() => setIsListOpen(false)}
+              >
+                <ChevronIcon className="fill-gray-500 size-6 rotate-180" />
+              </button>
+
+              {/* 📌 新着情報リスト */}
+              <div className="p-6 overflow-y-auto h-full">
+                <NewPointsList
+                  mapAnnotationData={mapAnnotationData.filter((item) =>
+                    selectedCategories.includes(item.category)
+                  )}
+                  onSelectAnnotation={moveMapToAnnotation}
+                  selectedCategories={selectedCategories}
+                  handleCategoryChange={handleCategoryChange}
+                  categories={categories}
+                />
+              </div>
+            </>
+          )}
+        </div>
       </div>
       <div
         className={`fixed top-0 left-0 h-full bg-white shadow-lg transition-transform ${
