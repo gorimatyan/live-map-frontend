@@ -7,4 +7,6 @@ export interface TweetData {
     authorProfile?: string | null;
     mediaUrl?: string | null;
     tweetUrl?: string | null;
+    isRateLimited?: boolean; // API制限時に true
+    retryAfter?: number;// 429発生時のリトライ推奨秒数
 }

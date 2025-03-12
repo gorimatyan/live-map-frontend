@@ -12,6 +12,20 @@ export const TweetList: React.FC<TweetListProps> = ({ tweets }) => {
     return <p>データを取得中...</p>
   }
 
+  // API制限チェック
+  if (tweets.length > 0 && tweets[0].isRateLimited) {
+    return (
+      <div className="p-4 text-center text-red-600">
+        <p className="font-semibold">⚠️ Twitter APIの制限によりデータを取得できません。</p>
+        {tweets[0].retryAfter && (
+          <p className="text-sm text-gray-500 mt-1">
+            {tweets[0].retryAfter} 秒後に再試行してください。
+          </p>
+        )}
+      </div>
+    )
+  }
+
   if (tweets.length === 0) {
     return <p>関連ツイートはありません。</p>
   }
@@ -19,13 +33,16 @@ export const TweetList: React.FC<TweetListProps> = ({ tweets }) => {
   return (
     <div className="mt-2 space-y-6">
       {tweets.map((tweet, index) => (
-        <div
+        <a
           key={index}
-          className="border border-gray-300 w-full p-5 rounded-lg bg-white dark:bg-gray-800 shadow-md flex-col flex items-start gap-4"
+          href={tweet.tweetUrl || "#"}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="block border border-gray-300 w-full p-5 rounded-lg bg-white dark:bg-gray-800 shadow-md flex-col flex items-start gap-4 hover:bg-gray-100 transition"
         >
           <div className="flex items-start space-x-4">
             <img
-              src={"https://abs.twimg.com/sticky/default_profile_images/default_profile_normal.png"}
+              src={tweet.authorProfile || "https://abs.twimg.com/sticky/default_profile_images/default_profile_normal.png"}
               alt="Profile"
               className="w-12 h-12 rounded-full"
             />
@@ -68,7 +85,7 @@ export const TweetList: React.FC<TweetListProps> = ({ tweets }) => {
               </p>
             </div>
           </div>
-        </div>
+        </a>
       ))}
     </div>
   )
