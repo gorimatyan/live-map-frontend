@@ -20,6 +20,7 @@ import { SunIcon } from "../Icons/SunIcon"
 import { categoryStyleMap } from "@/utils/function/map/categoryStyleMap"
 import { HeartIcon } from "../Icons/HeartIcon"
 import { RetweetIcon } from "../Icons/RetweetIcon"
+import { TweetList } from "../TweetList/TweetList"
 
 type AppleMapProps = {
   centerPoint: [number, number]
@@ -474,79 +475,7 @@ export const AppleMap = ({
               <h2 className="text-2xl font-bold mb-4 border-b border-gray-700 pb-2">
                 📢関連ツイート
               </h2>
-              {tweets === null ? (
-                <p>データを取得中...</p>
-              ) : tweets.length > 0 ? (
-                <div className="mt-2 space-y-6">
-                  {tweets.map((tweet, index) => (
-                    <div
-                      key={index}
-                      className="border border-gray-300 w-full p-5 rounded-lg bg-white dark:bg-gray-800 shadow-md flex-col flex items-start gap-4"
-                    >
-                      <div className="flex items-start space-x-4">
-                        {/* プロフィール画像 */}
-                        <img
-                          src={
-                            "https://abs.twimg.com/sticky/default_profile_images/default_profile_normal.png"
-                          }
-                          alt="Profile"
-                          className="w-12 h-12 rounded-full"
-                        />
-
-                        <div className="flex-1 flex flex-col gap-4">
-                          {/* ユーザー情報 */}
-                          <div className="flex items-start gap-0.5 flex-col text-gray-700 dark:text-gray-400">
-                            <span className="font-semibold">{tweet.authorName}</span>
-                            <span className="text-sm">@{tweet.authorId}</span>
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="flex flex-col gap-3">
-                        {/* ツイート本文（大きめ＆余白増やす） */}
-                        <p className="text-lg text-gray-700 whitespace-pre-line">{tweet.text}</p>
-
-                        {/* メディア（画像をより大きく） */}
-                        {tweet.mediaUrl && (
-                          <img
-                            src={tweet.mediaUrl}
-                            alt="Tweet media"
-                            className="rounded-lg border w-full object-cover"
-                          />
-                        )}
-
-                        {/* いいね・リツイート風デザイン（余白大きく） */}
-                        <div className="flex flex-col sm:flex-row gap-2 sm:justify-between">
-                          <div className="flex space-x-6 text-sm">
-                            <button className="hover:text-green-600 text-green-500 fill-green-500 hover:fill-green-600 flex items-center space-x-2">
-                              <RetweetIcon className="size-3.5" />
-                              <span className="text-sm">リツイート</span>
-                            </button>
-
-                            <button className="hover:text-red-600 text-red-500 fill-red-500 hover:fill-red-600 flex items-center space-x-2">
-                              <HeartIcon className="size-3.5" />
-                              <span className="text-sm">いいね</span>
-                            </button>
-                          </div>
-
-                          <p className="text-gray-700 dark:text-gray-400">
-                            {new Date(tweet.createdAt).toLocaleString("ja-JP", {
-                              year: "numeric",
-                              month: "long",
-                              day: "numeric",
-                              hour: "numeric",
-                              minute: "numeric",
-                              hour12: true, // 午前/午後を表示
-                            })}
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <p>関連ツイートはありません。</p>
-              )}
+              <TweetList tweets={tweets} />
             </section>
           </div>
         )}
