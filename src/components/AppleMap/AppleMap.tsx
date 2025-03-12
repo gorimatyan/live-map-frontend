@@ -21,6 +21,8 @@ import { categoryStyleMap } from "@/utils/function/map/categoryStyleMap"
 import { HeartIcon } from "../Icons/HeartIcon"
 import { RetweetIcon } from "../Icons/RetweetIcon"
 import { TweetList } from "../TweetList/TweetList"
+import { DetailSection } from "../DetailSection/DetailSection"
+import { DarkModeToggle } from "../DarkModeToggle/DarkModeToggle"
 
 type AppleMapProps = {
   centerPoint: [number, number]
@@ -376,16 +378,7 @@ export const AppleMap = ({
 
   return (
     <>
-      <button
-        onClick={toggleDarkMode}
-        className="z-10 bg-white rounded-full p-2 absolute top-12 right-3"
-      >
-        {isDarkMode ? (
-          <SunIcon className="fill-orange-400 sm:size-8 size-6" />
-        ) : (
-          <MoonIcon className="fill-yellow-500 sm:size-8 size-6" />
-        )}
-      </button>
+      <DarkModeToggle isDarkMode={isDarkMode} toggleDarkMode={toggleDarkMode} />
       <div ref={div} className={className} {...props} />
       <div>
         {categories.map((category) => (
@@ -416,61 +409,9 @@ export const AppleMap = ({
           </button>
         )}
 
-        {/* ↓↓↓ ココに書く ↓↓↓ */}
         {isSideFrameOpen && selectedAnnotation && (
           <div className="p-6 overflow-y-auto flex flex-col gap-6 h-full scrollbar-hide">
-            <section className="text-gray-700 flex flex-col gap-2">
-              <h2 className="text-2xl font-bold mb-4 border-b border-gray-700 pb-2">📍詳細情報</h2>
-
-              <div className="mb-4">
-                <p className="flex text-lg font-bold items-center gap-2 bg-white p-4 border border-gray-300 rounded-lg">
-                  <span className="text-2xl mb-1">
-                    {categoryStyleMap[selectedAnnotation.category]?.emoji || "❓"}
-                  </span>
-                  {selectedAnnotation.category}
-                </p>
-              </div>
-
-              <div className="mb-4">
-                <h3 className="font-semibold text-lg leading-loose">エリア情報</h3>
-                <p>{selectedAnnotation.data.area}</p>
-              </div>
-
-              {selectedAnnotation.title && (
-                <div className="mb-4">
-                  <h3 className="font-semibold text-lg leading-loose">概要</h3>
-                  <p>{selectedAnnotation.title}</p>
-                </div>
-              )}
-
-              {/* {selectedAnnotation.markerImgUrl && (
-              <div className="mb-4">
-                <h3 className="font-semibold text-lg leading-loose mb-2">画像</h3>
-                <img
-                  src={selectedAnnotation.markerImgUrl}
-                  alt="マーカー画像"
-                  className="rounded-md shadow-md w-full max-w-xs"
-                />
-              </div>
-            )} */}
-
-              {selectedAnnotation.data.link && (
-                <Link
-                  href={selectedAnnotation.data.link}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center justify-between bg-blue-500 hover:bg-blue-600 text-[#ffffff] p-4 rounded-md transition"
-                >
-                  <p className="flex items-center gap-2">
-                    <ExternalLinkIcon className="fill-[#ffffff] size-3.5" />
-                    <span className="text-lg tracking-wide">詳細ページへ</span>
-                  </p>
-                  <ChevronIcon className="fill-[#eeeeee] size-3 rotate-180" />
-                </Link>
-              )}
-            </section>
-
-            {/* 🔥 ツイート一覧の表示 */}
+            <DetailSection selectedAnnotation={selectedAnnotation} />
             <section className="text-gray-700 mt-6">
               <h2 className="text-2xl font-bold mb-4 border-b border-gray-700 pb-2">
                 📢関連ツイート
