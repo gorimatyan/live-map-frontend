@@ -3,6 +3,12 @@ import { Geist, Geist_Mono } from "next/font/google"
 import "./globals.css"
 import Head from "next/head"
 import Script from "next/script"
+import { Noto_Sans_JP } from "next/font/google"
+
+const NotoSansJPFont = Noto_Sans_JP({
+  weight: ["400", "700"],
+  subsets: ["latin"],
+})
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -29,7 +35,9 @@ export default function RootLayout({
       <Head>
         <Script src="https://cdn.apple-mapkit.com/mk/5.0.x/mapkit.js"></Script>
       </Head>
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased h-full w-full`}>
+      <body
+        className={`${geistSans.variable} ${geistMono.variable} ${NotoSansJPFont.className} antialiased h-full w-full`}
+      >
         {children}
       </body>
     </html>

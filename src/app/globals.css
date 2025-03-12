@@ -2,20 +2,54 @@
 @tailwind components;
 @tailwind utilities;
 
-/* :root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+:root {
+  --background: #f8fafa;
+  --background-dark: #101218;
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-} */
+  --foreground: #171717;
+  --foreground-dark: #ededed;
+}
 
 body {
   color: var(--foreground);
   background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: "Noto Sans JP", sans-serif;
+}
+
+.text-lg,
+.text-xl {
+  letter-spacing: 0.025em;
+}
+
+.text-2xl {
+  letter-spacing: 0.05em;
+}
+
+/* スクロールバーを非表示にするスタイル */
+.scrollbar-hide {
+  -ms-overflow-style: none; /* Internet Explorer 10+ */
+  scrollbar-width: none; /* Firefox */
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none; /* Safari and Chrome */
+}
+
+/* ダークモード時のスタイル */
+.dark {
+  .text-white {
+    color: var(--foreground); /* ダークモード時の色 */
+  }
+  .text-gray-700 {
+    color: var(--foreground-dark); /* ダークモード時の色 */
+  }
+  .fill-gray-700 {
+    fill: var(--foreground-dark); /* ダークモード時の色 */
+  }
+  .border-gray-700 {
+    border-color: var(--foreground-dark); /* ダークモード時の色 */
+  }
+  .bg-white {
+    background-color: var(--background-dark); /* ダークモード時の色 */
+  }
 }
