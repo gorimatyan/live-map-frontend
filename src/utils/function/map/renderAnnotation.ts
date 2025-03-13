@@ -77,6 +77,7 @@ export const renderAnnotations = (
         area: annotation.data.area,
         link: annotation.data.link,
         publishedAt: annotation.publishedAt,
+        sourceName: annotation.sourceName,
         markerImgUrl: annotation.markerImgUrl,
       } as MarkerAnnotationData,
     })

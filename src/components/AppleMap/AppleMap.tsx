@@ -7,7 +7,7 @@ import { loadMapkitJs } from "@/utils/function/map/loadMapkitJs"
 import { toCompatibleBounds } from "@/utils/function/map/toCompatibleBounds"
 import { ChevronIcon } from "../Icons/ChevronIcon"
 import { fetchJson } from "@/utils/function/fetchUtil"
-import { TweetData } from "@/utils/type/api/GetTweetType"
+import { GetTweetData } from "@/utils/type/api/GetTweetType"
 import { formatTweetQueryParams } from "@/utils/function/formatTweetQueryParams"
 import { TweetList } from "../TweetList/TweetList"
 import { DetailSection } from "../DetailSection/DetailSection"
@@ -45,8 +45,8 @@ export const AppleMap = ({
   const [isSideFrameOpen, setIsSideFrameOpen] = useState<boolean>(false)
   const [selectedElement, setSelectedElement] = useState<HTMLElement | null>(null)
   const [selectedAnnotation, setSelectedAnnotation] = useState<mapkit.Annotation | null>(null)
-  const [tweetsCache, setTweetsCache] = useState<Record<number, TweetData[]>>({})
-  const [tweets, setTweets] = useState<TweetData[] | null>(null)
+  const [tweetsCache, setTweetsCache] = useState<Record<number, GetTweetData[]>>({})
+  const [tweets, setTweets] = useState<GetTweetData[] | null>(null)
   const [selectedCategories, setSelectedCategories] = useState<string[]>(categories)
   const [selectedDate, setSelectedDate] = useState<string>("")
   const [isDarkMode, setIsDarkMode] = useState<boolean>(false) // ダークモードの状態を管理
@@ -383,7 +383,7 @@ export const AppleMap = ({
       const apiUrl = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/twitter/tweets?groups=${encodeURIComponent(groupsParam)}`
       console.log(`🚀 APIリクエスト: ${apiUrl}`)
 
-      const res = await fetchJson<{ data?: TweetData[]; error?: string }>(apiUrl)
+      const res = await fetchJson<{ data?: GetTweetData[]; error?: string }>(apiUrl)
 
       if (res.error) {
         console.error("❌ Twitterデータの取得に失敗:", res.error)
