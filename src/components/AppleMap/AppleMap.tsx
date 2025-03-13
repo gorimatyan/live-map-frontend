@@ -1,30 +1,20 @@
 "use client"
 
 import React, { useEffect, useRef, useState } from "react"
-import {
-  MapAnnotationData,
-  MapInstance,
-  MapkitInstance,
-} from "@/utils/type/map/MapAnnotationDataType"
-import { renderAnnotations } from "@/utils/function/map/renderAnnotation"
+import { GetNewsData, MapInstance, MapkitInstance } from "@/utils/type/api/GetNewsType"
+import { MarkerAnnotationData, renderAnnotations } from "@/utils/function/map/renderAnnotation"
 import { loadMapkitJs } from "@/utils/function/map/loadMapkitJs"
 import { toCompatibleBounds } from "@/utils/function/map/toCompatibleBounds"
 import { ChevronIcon } from "../Icons/ChevronIcon"
 import { fetchJson } from "@/utils/function/fetchUtil"
-import { TweetData } from "@/utils/type/api/TweetType"
+import { TweetData } from "@/utils/type/api/GetTweetType"
 import { formatTweetQueryParams } from "@/utils/function/formatTweetQueryParams"
-import Link from "next/link"
-import { ExternalLinkIcon } from "../Icons/ExternalLinkIcon"
-import { MoonIcon } from "../Icons/MoonIcon"
-import { SunIcon } from "../Icons/SunIcon"
-import { categoryStyleMap } from "@/utils/function/map/categoryStyleMap"
-import { HeartIcon } from "../Icons/HeartIcon"
-import { RetweetIcon } from "../Icons/RetweetIcon"
 import { TweetList } from "../TweetList/TweetList"
 import { DetailSection } from "../DetailSection/DetailSection"
 import { DarkModeToggle } from "../DarkModeToggle/DarkModeToggle"
-import NewPointsList from "./NewPointsList"
+import { RightSideContent } from "../RightSideContent/RightSideContent"
 import { HamburgerIcon } from "@/components/Icons/HamburgerIcon"
+import { convertDateLabelToDate } from "@/utils/function/date/convertDateLabelToDate"
 
 type AppleMapProps = {
   centerPoint: [number, number]
@@ -34,10 +24,11 @@ type AppleMapProps = {
     getSouthWest: () => [number, number]
     getNorthEast: () => [number, number]
   }) => void
-  mapAnnotationData: MapAnnotationData[]
+  mapAnnotationData: GetNewsData[]
 } & React.HTMLAttributes<HTMLDivElement>
 
 const categories = ["火災", "殺人", "救急", "警戒", "ハッカソン", "その他"]
+const dates = ["今日", "今日と昨日", "3日以内", "1週間以内", "1ヶ月以内"]
 
 export const AppleMap = ({
   centerPoint,
@@ -53,10 +44,11 @@ export const AppleMap = ({
   const annotationRefs = useRef<Record<string, any>>({}) // アノテーション（マップにある印）の状態管理用のref
   const [isSideFrameOpen, setIsSideFrameOpen] = useState<boolean>(false)
   const [selectedElement, setSelectedElement] = useState<HTMLElement | null>(null)
-  const [selectedAnnotation, setSelectedAnnotation] = useState<MapAnnotationData | null>(null)
+  const [selectedAnnotation, setSelectedAnnotation] = useState<mapkit.Annotation | null>(null)
   const [tweetsCache, setTweetsCache] = useState<Record<number, TweetData[]>>({})
   const [tweets, setTweets] = useState<TweetData[] | null>(null)
   const [selectedCategories, setSelectedCategories] = useState<string[]>(categories)
+  const [selectedDate, setSelectedDate] = useState<string>("")
   const [isDarkMode, setIsDarkMode] = useState<boolean>(false) // ダークモードの状態を管理
   const [isListOpen, setIsListOpen] = useState(false)
 
@@ -64,6 +56,10 @@ export const AppleMap = ({
     setSelectedCategories((prev) =>
       prev.includes(category) ? prev.filter((c) => c !== category) : [...prev, category]
     )
+  }
+
+  const handleDateChange = (date: string) => {
+    setSelectedDate(date)
   }
 
   const toggleDarkMode = () => {
@@ -98,14 +94,21 @@ export const AppleMap = ({
     // 全てのアノテーションを取得
     const newAllAnnotations = map.annotations
 
-    // 選択済みのカテゴリーを除外したアノテーションを取得
-    const shouldRemoveAnnotations = newAllAnnotations.filter(
-      (annotation) => !selectedCategories.includes(annotation.data.category)
-    )
+    // 選択済みのカテゴリーと日時を除外したアノテーションを取得
+    const shouldRemoveAnnotations = newAllAnnotations.filter((annotation) => {
+      const annotationDate = new Date(annotation.data.publishedAt || 0)
+      const selectedDateObj = convertDateLabelToDate(selectedDate)
+
+      // カテゴリーと日時の条件に合わないアノテーションを除外
+      return (
+        !selectedCategories.includes(annotation.data.category) ||
+        (selectedDate && annotationDate < selectedDateObj)
+      )
+    })
 
     // 全てのアノテーションから選択済みのカテゴリーを除外したアノテーションを削除
     map.removeAnnotations(shouldRemoveAnnotations)
-  }, [selectedCategories, mapAnnotationData])
+  }, [selectedCategories, selectedDate, mapAnnotationData])
 
   useEffect(() => {
     if (!div.current) {
@@ -114,7 +117,6 @@ export const AppleMap = ({
 
     // Mapkit.jsを読み込んだらマップの初期化を実行
     loadMapkitJs().then((mapkit: MapkitInstance) => {
-      console.log("mapkitがloadされました")
       if (mapRef.current) {
         // 既存のマップインスタンスを削除
         const [map] = mapRef.current
@@ -157,7 +159,7 @@ export const AppleMap = ({
    * @param annotation
    * @returns
    */
-  const moveMapToAnnotation = (annotation: MapAnnotationData) => {
+  const moveMapToAnnotation = (annotation: GetNewsData) => {
     if (!mapRef.current) {
       return
     }
@@ -314,6 +316,7 @@ export const AppleMap = ({
       const currentRegion = map.region
       const currentSpan = currentRegion.span
       const region = new mapkit.CoordinateRegion(coordinate, currentSpan)
+      const markerAnnotation = event.annotation
 
       // クラスターアノテーションをクリックの場合は処理を中断
       if (event.annotation?.memberAnnotations != undefined) {
@@ -333,8 +336,8 @@ export const AppleMap = ({
 
       map.setRegionAnimated(region)
 
-      if (event.annotation?.data) {
-        await handleSelect(event.annotation.data)
+      if (markerAnnotation) {
+        await handleSelect(markerAnnotation)
       }
 
       annotationRefs.current[event.annotation.data?.id]?.onClick?.()
@@ -359,23 +362,22 @@ export const AppleMap = ({
     }
   }
 
-  const handleSelect = async (data: MapAnnotationData) => {
-    setSelectedAnnotation(data)
+  const handleSelect = async (annotation: mapkit.Annotation) => {
+    setSelectedAnnotation(annotation)
     setIsSideFrameOpen(true)
     setTweets(null) // 前回のツイート情報をクリア
 
     // キャッシュがあれば、それを利用
-    if (tweetsCache[data.id]) {
-      console.log(`📌 キャッシュからツイートを取得: ${data.id}`)
-      setTweets(tweetsCache[data.id])
+    if (tweetsCache[annotation.data.id]) {
+      console.log(`📌 キャッシュからツイートを取得: ${annotation.data.id}`)
+      setTweets(tweetsCache[annotation.data.id])
       return
     }
 
     try {
-      console.log(`🔍 APIからツイートを取得: ${data.id}`)
-
       // 📌 `formatTweetQueryParams` を使って検索クエリを作成
-      const groupsParam = formatTweetQueryParams(data)
+      const groupsParam = formatTweetQueryParams(annotation.data)
+      console.log("🔍 APIからツイートを取得", annotation.data)
 
       // 📌 APIリクエストを送る
       const apiUrl = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/twitter/tweets?groups=${encodeURIComponent(groupsParam)}`
@@ -392,7 +394,7 @@ export const AppleMap = ({
         console.log("✅ 取得したツイート:", res.data)
 
         // 📌 キャッシュに保存 & ステート更新
-        setTweetsCache((prev) => ({ ...prev, [data.id]: res.data ?? [] }))
+        setTweetsCache((prev) => ({ ...prev, [annotation.data.id]: res.data ?? [] }))
         setTweets(res.data)
       }
     } catch (error) {
@@ -434,12 +436,12 @@ export const AppleMap = ({
                 className="absolute rounded-full top-1/2 left-[-27px] transform -translate-y-1/2 bg-white border border-gray-300 p-3 shadow-lg"
                 onClick={() => setIsListOpen(false)}
               >
-                <ChevronIcon className="fill-gray-500 size-6 rotate-180" />
+                <ChevronIcon className="fill-gray-700 size-6 rotate-180" />
               </button>
 
               {/* 📌 新着情報リスト */}
               <div className="p-6 overflow-y-auto h-full">
-                <NewPointsList
+                <RightSideContent
                   mapAnnotationData={mapAnnotationData.filter((item) =>
                     selectedCategories.includes(item.category)
                   )}
@@ -447,6 +449,9 @@ export const AppleMap = ({
                   selectedCategories={selectedCategories}
                   handleCategoryChange={handleCategoryChange}
                   categories={categories}
+                  selectedDate={selectedDate}
+                  handleDateChange={handleDateChange}
+                  dates={dates}
                 />
               </div>
             </>

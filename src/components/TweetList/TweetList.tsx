@@ -1,10 +1,10 @@
 import React from "react"
-import { TweetData } from "@/utils/type/api/TweetType"
+import { GetTweetData } from "@/utils/type/api/GetTweetType"
 import { HeartIcon } from "../Icons/HeartIcon"
 import { RetweetIcon } from "../Icons/RetweetIcon"
 
 type TweetListProps = {
-  tweets: TweetData[] | null
+  tweets: GetTweetData[] | null
 }
 
 export const TweetList: React.FC<TweetListProps> = ({ tweets }) => {

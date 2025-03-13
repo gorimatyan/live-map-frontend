@@ -1,12 +1,13 @@
 import React from "react"
-import { MapAnnotationData } from "@/utils/type/map/MapAnnotationDataType"
+import { GetNewsData } from "@/utils/type/api/GetNewsType"
 import Link from "next/link"
 import { ChevronIcon } from "../Icons/ChevronIcon"
 import { ExternalLinkIcon } from "../Icons/ExternalLinkIcon"
 import { categoryStyleMap } from "@/utils/function/map/categoryStyleMap"
+import { MarkerAnnotationData } from "@/utils/function/map/renderAnnotation"
 
 type DetailSectionProps = {
-  selectedAnnotation: MapAnnotationData
+  selectedAnnotation: mapkit.Annotation
 }
 
 export const DetailSection: React.FC<DetailSectionProps> = ({ selectedAnnotation }) => (
@@ -16,9 +17,9 @@ export const DetailSection: React.FC<DetailSectionProps> = ({ selectedAnnotation
     <div className="mb-4">
       <p className="flex text-lg font-bold items-center gap-2 bg-white p-4 border border-gray-300 rounded-lg">
         <span className="text-2xl mb-1">
-          {categoryStyleMap[selectedAnnotation.category]?.emoji || "❓"}
+          {categoryStyleMap[selectedAnnotation.data.category]?.emoji || "❓"}
         </span>
-        {selectedAnnotation.category}
+        {selectedAnnotation.data.category}
       </p>
     </div>
 
