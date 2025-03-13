@@ -1,12 +1,13 @@
 import React from "react"
-import { MapAnnotationData } from "@/utils/type/map/MapAnnotationDataType"
+import { GetNewsData } from "@/utils/type/api/GetNewsType"
 import Link from "next/link"
 import { ChevronIcon } from "../Icons/ChevronIcon"
 import { ExternalLinkIcon } from "../Icons/ExternalLinkIcon"
 import { categoryStyleMap } from "@/utils/function/map/categoryStyleMap"
+import { MarkerAnnotationData } from "@/utils/function/map/renderAnnotation"
 
 type DetailSectionProps = {
-  selectedAnnotation: MapAnnotationData
+  selectedAnnotation: mapkit.Annotation
 }
 
 export const DetailSection: React.FC<DetailSectionProps> = ({ selectedAnnotation }) => (
@@ -16,9 +17,9 @@ export const DetailSection: React.FC<DetailSectionProps> = ({ selectedAnnotation
     <div className="mb-4">
       <p className="flex text-lg font-bold items-center gap-2 bg-white p-4 border border-gray-300 rounded-lg">
         <span className="text-2xl mb-1">
-          {categoryStyleMap[selectedAnnotation.category]?.emoji || "❓"}
+          {categoryStyleMap[selectedAnnotation.data.category]?.emoji || "❓"}
         </span>
-        {selectedAnnotation.category}
+        {selectedAnnotation.data.category}
       </p>
     </div>
 
@@ -34,19 +35,38 @@ export const DetailSection: React.FC<DetailSectionProps> = ({ selectedAnnotation
       </div>
     )}
 
-    {selectedAnnotation.data.link && (
-      <Link
-        href={selectedAnnotation.data.link}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="flex items-center justify-between bg-blue-500 hover:bg-blue-600 text-[#ffffff] p-4 rounded-md transition"
-      >
-        <p className="flex items-center gap-2">
-          <ExternalLinkIcon className="fill-[#ffffff] size-3.5" />
-          <span className="text-lg tracking-wide">詳細ページへ</span>
+    {selectedAnnotation.data.sourceName && (
+      <div className="mb-4">
+        <h3 className="font-semibold text-lg leading-loose">情報発信元</h3>
+        <Link
+          href={selectedAnnotation.data.link}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center justify-between border dark:hover:bg-gray-800 border-gray-300 text-gray-700 p-4 rounded-md transition"
+        >
+          <p className="flex items-center gap-2">
+            <ExternalLinkIcon className="fill-gray-700 size-3.5" />
+            <span className="text-lg tracking-wide">{selectedAnnotation.data.sourceName}</span>
+          </p>
+          <ChevronIcon className="fill-gray-700 size-3 rotate-180" />
+        </Link>
+      </div>
+    )}
+
+    {selectedAnnotation.data.publishedAt && (
+      <div className="mb-4">
+        <h3 className="font-semibold text-lg leading-loose">情報発信日時</h3>
+        <p>
+          {new Date(selectedAnnotation.data.publishedAt).toLocaleString("ja-JP", {
+            year: "numeric",
+            month: "long",
+            day: "numeric",
+            hour: "numeric",
+            minute: "numeric",
+            hour12: true,
+          })}
         </p>
-        <ChevronIcon className="fill-[#eeeeee] size-3 rotate-180" />
-      </Link>
+      </div>
     )}
   </section>
 )

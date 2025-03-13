@@ -1,15 +1,12 @@
-export type MapInstance = mapkit.Map
-export type MapkitInstance = typeof mapkit
-
-export type MapAnnotationData = {
+export type MapAnnotationType = {
   id: number
   category: string // ニュースのカテゴリ
   location: { lat: number; lng: number }
   title: string // ニュースのタイトル
   summary: string // ニュースの要約
   contentBody: string // ニュースの本文
-  sourceName: string|null // ニュースの発信元
-  sourceUrl: string|null // 発信元のURL
+  sourceName: string | null // ニュースの発信元
+  sourceUrl: string | null // 発信元のURL
   clusteringIdentifier: string
   data: {
     area: string

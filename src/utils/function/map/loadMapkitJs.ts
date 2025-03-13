@@ -1,4 +1,4 @@
-import { MapkitInstance } from "@/utils/type/map/MapAnnotationDataType"
+import { MapkitInstance } from "@/utils/type/api/GetNewsType"
 
 /**
  * Mapkit.jsを読み込む

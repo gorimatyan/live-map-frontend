@@ -2,21 +2,19 @@
 
 import { AppleMap } from "@/components/AppleMap/AppleMap"
 import { useEffect, useState } from "react"
-import { MapAnnotationData } from "@/utils/type/map/MapAnnotationDataType"
+import { GetNewsData, NEWS_API_ENDPOINT } from "@/utils/type/api/GetNewsType"
 import { fetchJson } from "@/utils/function/fetchUtil"
-
-const FIRE_API_ENDPOINT = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/fire-trucks/missions`
-const NEWS_API_ENDPOINT = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/news`
+import { FIRE_API_ENDPOINT, GetFireData } from "@/utils/type/api/GetMissionType"
 
 export default function Home() {
-  const [mapAnnotationData, setMapAnnotationData] = useState<MapAnnotationData[]>([])
+  const [mapAnnotationData, setMapAnnotationData] = useState<GetNewsData[]>([])
 
   // データを取得して変換
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const fireTruckResponse = await fetchJson<MapAnnotationData[]>(FIRE_API_ENDPOINT)
-        const newsResponse = await fetchJson<MapAnnotationData[]>(NEWS_API_ENDPOINT)
+        const fireTruckResponse = await fetchJson<GetFireData[]>(FIRE_API_ENDPOINT)
+        const newsResponse = await fetchJson<GetNewsData[]>(NEWS_API_ENDPOINT)
         console.log(fireTruckResponse)
         console.log(newsResponse)
         setMapAnnotationData([...fireTruckResponse, ...newsResponse])
