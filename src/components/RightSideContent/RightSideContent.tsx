@@ -50,7 +50,7 @@ export const RightSideContent: React.FC<RightSideContentProps> = ({
   }
 
   return (
-    <div className="bg-gray-100 max-h-full shadow-lg rounded-lg w-full max-w-[400px] overflow-hidden h-screen flex flex-col">
+    <div className="bg-gray-100 max-h-full shadow-lg rounded-lg w-full overflow-hidden h-screen flex flex-col">
       {/* 📌 タブ切り替え */}
       <div className="flex border rounded-t-lg bg-white text-center sticky top-0 z-10">
         <button
@@ -76,7 +76,7 @@ export const RightSideContent: React.FC<RightSideContentProps> = ({
       </div>
 
       {/* 📌 コンテンツ表示 */}
-      <div className="flex-1 overflow-y-auto border rounded-b-lg border-gray-200 bg-white">
+      <div className="flex-1 overflow-y-auto scrollbar-hide border rounded-b-lg border-gray-200 bg-white">
         {activeTab === "new" ? (
           // 🆕 新着情報タブ
           <div className="bg-white">

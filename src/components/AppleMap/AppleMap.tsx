@@ -15,6 +15,7 @@ import { DarkModeToggle } from "../DarkModeToggle/DarkModeToggle"
 import { RightSideContent } from "../RightSideContent/RightSideContent"
 import { HamburgerIcon } from "@/components/Icons/HamburgerIcon"
 import { convertDateLabelToDate } from "@/utils/function/date/convertDateLabelToDate"
+import { HamburgerToggle } from "../HamburgerToggle/HamburgerToggle"
 
 type AppleMapProps = {
   centerPoint: [number, number]
@@ -160,6 +161,7 @@ export const AppleMap = ({
    * @returns
    */
   const moveMapToAnnotation = (annotation: GetNewsData) => {
+    setIsListOpen(false)
     if (!mapRef.current) {
       return
     }
@@ -411,53 +413,49 @@ export const AppleMap = ({
 
   return (
     <>
-      <DarkModeToggle isDarkMode={isDarkMode} toggleDarkMode={toggleDarkMode} />
       <div ref={div} className={className} {...props} />
 
-      <div className="relative">
-        {/* 📌 右下のハンバーガーボタン */}
-        <button
-          className="fixed bottom-16 right-5 bg-white p-3 rounded-full shadow-lg border border-gray-300 z-50"
-          onClick={() => setIsListOpen(!isListOpen)}
-        >
-          <HamburgerIcon className="w-6 h-6 text-gray-600" />
-        </button>
+      {/* 📌 右上のダークモードボタン */}
+      <DarkModeToggle isDarkMode={isDarkMode} toggleDarkMode={toggleDarkMode} />
+      {/* 📌 右上のハンバーガーボタン */}
+      <HamburgerToggle toggleHamburger={() => setIsListOpen(!isListOpen)} />
 
-        {/* 📌 右側スライドパネル（幅を狭めた & デザイン統一） */}
-        <div
-          className={`fixed top-0 right-0 h-full bg-white shadow-lg transition-transform ${
-            isListOpen ? "w-1/4 translate-x-0" : "w-0 translate-x-full"
-          }`}
-        >
-          {isListOpen && (
-            <>
-              {/* 📌 閉じるボタン */}
-              <button
-                className="absolute rounded-full top-1/2 left-[-27px] transform -translate-y-1/2 bg-white border border-gray-300 p-3 shadow-lg"
-                onClick={() => setIsListOpen(false)}
-              >
-                <ChevronIcon className="fill-gray-700 size-6 rotate-180" />
-              </button>
+      {/* 📌 右側スライドパネル */}
+      <div
+        className={`fixed z-20 top-0 right-0 h-full bg-white shadow-lg transition-transform ${
+          isListOpen ? "xl:w-5/12 md:w-2/3 w-11/12 translate-x-0" : "w-0 translate-x-full"
+        }`}
+      >
+        {isListOpen && (
+          <>
+            {/* 📌 閉じるボタン */}
+            <button
+              className="absolute rounded-full top-1/2 right-0 transform -translate-y-1/2 bg-white border border-gray-300 p-3 shadow-lg"
+              onClick={() => setIsListOpen(false)}
+            >
+              <ChevronIcon className="fill-gray-700 size-6 rotate-180" />
+            </button>
 
-              {/* 📌 新着情報リスト */}
-              <div className="p-6 overflow-y-auto h-full">
-                <RightSideContent
-                  mapAnnotationData={mapAnnotationData.filter((item) =>
-                    selectedCategories.includes(item.category)
-                  )}
-                  onSelectAnnotation={moveMapToAnnotation}
-                  selectedCategories={selectedCategories}
-                  handleCategoryChange={handleCategoryChange}
-                  categories={categories}
-                  selectedDate={selectedDate}
-                  handleDateChange={handleDateChange}
-                  dates={dates}
-                />
-              </div>
-            </>
-          )}
-        </div>
+            {/* 📌 新着情報リスト */}
+            <div className="p-6 overflow-y-auto h-full">
+              <RightSideContent
+                mapAnnotationData={mapAnnotationData.filter((item) =>
+                  selectedCategories.includes(item.category)
+                )}
+                onSelectAnnotation={moveMapToAnnotation}
+                selectedCategories={selectedCategories}
+                handleCategoryChange={handleCategoryChange}
+                categories={categories}
+                selectedDate={selectedDate}
+                handleDateChange={handleDateChange}
+                dates={dates}
+              />
+            </div>
+          </>
+        )}
       </div>
+
+      {/* 📌 左側スライドパネル */}
       <div
         className={`fixed text-gray-700 top-0 left-0 h-full bg-white shadow-lg transition-transform ${
           isSideFrameOpen ? "xl:w-5/12 md:w-2/3 w-11/12 translate-x-0" : "w-0 -translate-x-full"
