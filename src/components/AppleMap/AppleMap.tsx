@@ -469,14 +469,14 @@ export const AppleMap = ({
           <button
             tabIndex={undefined}
             onClick={() => setIsSideFrameOpen(!isSideFrameOpen)}
-            className="absolute rounded-lg top-[50dvh] right-4 transform translate-x-full bg-white p-4"
+            className="absolute rounded-full border border-gray-300 top-[50dvh] right-6 transform translate-x-full bg-white p-3"
           >
-            <ChevronIcon className="fill-gray-700 size-7" />
+            <ChevronIcon className="fill-gray-700 size-6" />
           </button>
         )}
 
         {isSideFrameOpen && selectedAnnotation && (
-          <div className="p-6 overflow-y-auto flex flex-col gap-6 h-full scrollbar-hide">
+          <div className="py-6 pl-6 pr-8 overflow-y-auto flex flex-col gap-6 h-full scrollbar-hide">
             <DetailSection selectedAnnotation={selectedAnnotation} />
             <section className="text-gray-700 mt-6">
               <h2 className="text-2xl font-bold mb-4 border-b border-gray-700 pb-2">
