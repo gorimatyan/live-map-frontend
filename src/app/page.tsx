@@ -30,7 +30,7 @@ export default function Home() {
     <div className="w-full h-[100dvh]">
       <AppleMap
         centerPoint={[33.5902, 130.4017]}
-        zoom={12}
+        zoom={10}
         className={"h-full w-full"}
         mapAnnotationData={mapAnnotationData}
       />

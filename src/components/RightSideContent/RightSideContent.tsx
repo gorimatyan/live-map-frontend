@@ -80,9 +80,9 @@ export const RightSideContent: React.FC<RightSideContentProps> = ({
         {activeTab === "new" ? (
           // 🆕 新着情報タブ
           <div className="bg-white">
-            {sortedAnnotations.map((item) => (
+            {sortedAnnotations.map((item, index) => (
               <div
-                key={item.id}
+                key={index}
                 className="px-4 py-4 border-b border-gray-200 last:rounded-b-lg hover:bg-gray-200 dark:hover:bg-gray-800 transition duration-200 flex flex-col gap-2 cursor-pointer"
                 onClick={() => onSelectAnnotation(item)}
               >
@@ -145,7 +145,6 @@ export const RightSideContent: React.FC<RightSideContentProps> = ({
                 </button>
               </div>
             </div>
-
             {/* 📌 他のフィルター項目が増える場合、ここに追加 */}
             {/* 例: <div>エリア選択、日時フィルターなど</div> */}
             <div>
