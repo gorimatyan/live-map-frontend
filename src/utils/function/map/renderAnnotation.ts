@@ -86,7 +86,8 @@ export const renderAnnotations = (
     newAnnotations.push(markerAnnotation)
 
     // アノテーションの表示の重複を避ける処理（らしい）。表示済みのアノテーションをRefで管理している。
-    annotationRefs.current[annotation.id] = annotation
+    // 重複を避けるために、idとtitleの先頭10文字を結合した文字列をキーにして管理している。
+    annotationRefs.current[annotation.id + annotation.title.substring(0, 10)] = annotation
   }
 
   // newAnnotationsをmapに表示
