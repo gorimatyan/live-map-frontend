@@ -1,8 +1,7 @@
-import { GetNewsData } from "@/utils/type/api/GetNewsType"
-import { MarkerAnnotationData } from "./map/renderAnnotation"
+import { MarkerAnnotationData } from "@/utils/type/map/MapAnnotationType"
 
 /**
- * 🔄 マップアノテーションデータを Twitter API 用のクエリに変換する関数
+ * 🔄 マップアノテーションデータを Twitter API に渡すためのクエリに変換する関数
  *
  * @param {MapAnnotationData} data - 選択されたマップアノテーションデータ
  * @returns {string} 変換後の検索クエリ（例: `"ハッカソン,福岡市|ハッカソン,中央区|ハッカソン,天神"`）

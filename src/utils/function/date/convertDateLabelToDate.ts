@@ -1,4 +1,8 @@
-// 日付ラベルを実際の日付に変換する関数
+/**
+ * 日付ラベルを実際の日付に変換する関数
+ * @param label 日付ラベル
+ * @returns 実際の日付
+ */
 export const convertDateLabelToDate = (label: string): Date => {
   const today = new Date()
   switch (label) {
