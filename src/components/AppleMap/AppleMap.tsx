@@ -458,7 +458,7 @@ export const AppleMap = ({
 
       {/* 📌 左側スライドパネル */}
       <div
-        className={`fixed text-gray-700 top-0 left-0 h-full bg-white shadow-lg transition-transform ${
+        className={`fixed text-gray-700 top-0 left-0 h-full bg-white shadow-lg transition-transform z-20 ${
           isSideFrameOpen ? "xl:w-5/12 md:w-2/3 w-11/12 translate-x-0" : "w-0 -translate-x-full"
         }`}
       >

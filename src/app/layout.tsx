@@ -130,6 +130,9 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} ${NotoSansJPFont.className} antialiased h-full w-full`}
       >
+        <h1 className="opacity-40 absolute top-1 left-1 text-xl font-bold z-10">
+          ライブマップ.NET
+        </h1>
         {children}
       </body>
     </html>
