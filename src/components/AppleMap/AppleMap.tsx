@@ -16,6 +16,7 @@ import { RightSideContent } from "../RightSideContent/RightSideContent"
 import { HamburgerIcon } from "@/components/Icons/HamburgerIcon"
 import { convertDateLabelToDate } from "@/utils/function/date/convertDateLabelToDate"
 import { HamburgerToggle } from "../HamburgerToggle/HamburgerToggle"
+import { categoryStyleMap } from "@/utils/function/map/categoryStyleMap"
 
 type AppleMapProps = {
   centerPoint: [number, number]
@@ -28,7 +29,7 @@ type AppleMapProps = {
   mapAnnotationData: GetNewsData[]
 } & React.HTMLAttributes<HTMLDivElement>
 
-const categories = ["火災", "殺人", "救急", "警戒", "ハッカソン", "その他"]
+const categories = Object.keys(categoryStyleMap)
 const dates = ["今日", "今日と昨日", "3日以内", "1週間以内", "1ヶ月以内"]
 
 export const AppleMap = ({
@@ -73,7 +74,7 @@ export const AppleMap = ({
   }
 
   /**
-   * このuseEffectはカテゴリーが変更されたときの処理。
+   * このuseEffectは絞り込み機能でカテゴリーが変更されたときの処理。
    * やってることはアノテーションを全部消して、新しく追加してフィルターで弾かれたやつを消すだけ。
    */
   useEffect(() => {

@@ -4,6 +4,8 @@ export const categoryStyleMap: Record<string, { emoji: string; color: string }> 
   殺人: { emoji: "💀", color: "#222222" },
   救急: { emoji: "🚑", color: "#ffffff" },
   警戒: { emoji: "🚨", color: "#eeee00" },
+  窃盗: { emoji: "🕵🏽‍♂️", color: "#222222" },
+  事故: { emoji: "💥", color: "#222222" },
   ハッカソン: { emoji: "💻", color: "#00ccff" },
   その他: { emoji: "❓", color: "#cccccc" },
   // 他のカテゴリーを追加
