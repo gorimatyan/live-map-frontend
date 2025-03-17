@@ -2,7 +2,7 @@
 
 import React, { useEffect, useRef, useState } from "react"
 import { GetNewsData, MapInstance, MapkitInstance } from "@/utils/type/api/GetNewsType"
-import { MarkerAnnotationData, renderAnnotations } from "@/utils/function/map/renderAnnotation"
+import { renderAnnotations } from "@/utils/function/map/renderAnnotation"
 import { loadMapkitJs } from "@/utils/function/map/loadMapkitJs"
 import { toCompatibleBounds } from "@/utils/function/map/toCompatibleBounds"
 import { ChevronIcon } from "../Icons/ChevronIcon"
