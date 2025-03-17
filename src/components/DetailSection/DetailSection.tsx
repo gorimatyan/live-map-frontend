@@ -1,15 +1,18 @@
 import React from "react"
-import { GetNewsData } from "@/utils/type/api/GetNewsType"
 import Link from "next/link"
 import { ChevronIcon } from "../Icons/ChevronIcon"
 import { ExternalLinkIcon } from "../Icons/ExternalLinkIcon"
 import { categoryStyleMap } from "@/utils/function/map/categoryStyleMap"
-import { MarkerAnnotationData } from "@/utils/function/map/renderAnnotation"
 
 type DetailSectionProps = {
   selectedAnnotation: mapkit.Annotation
 }
 
+/**
+ * 詳細情報セクション
+ * @param selectedAnnotation 選択されたアノテーション
+ * @returns 詳細情報セクション
+ */
 export const DetailSection: React.FC<DetailSectionProps> = ({ selectedAnnotation }) => (
   <section className="text-gray-700 flex flex-col gap-2">
     <h2 className="text-2xl font-bold mb-4 border-b border-gray-700 pb-2">📍詳細情報</h2>
