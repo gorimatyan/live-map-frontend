@@ -1,3 +1,8 @@
+/**
+ * fetchを使ってAPIからJSONを取得する関数
+ * @param url 取得するURL
+ * @returns JSON
+ */
 export async function fetchJson<T>(url: string): Promise<T> {
   const response = await fetch(url, {
     headers: {

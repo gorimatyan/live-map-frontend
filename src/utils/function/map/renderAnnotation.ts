@@ -1,18 +1,14 @@
 import { GetNewsData, MapInstance, MapkitInstance } from "@/utils/type/api/GetNewsType"
 import { RefObject } from "react"
 import { categoryStyleMap } from "./categoryStyleMap"
+import { MarkerAnnotationData } from "@/utils/type/map/MapAnnotationType"
 
-export type MarkerAnnotationData = {
-  id: number
-  category: string
-  location: { lat: number; lng: number }
-  area: string
-  link: string
-  publishedAt: Date
-  markerImgUrl: string
-}
-
-// マーカーの表示をする関数
+/**
+ * マーカー（アノテーション）の表示をする関数
+ * @param mapRef マップのRef
+ * @param annotationRefs アノテーションのRef
+ * @param annotationData アノテーションのデータ
+ */
 export const renderAnnotations = (
   mapRef: RefObject<[MapInstance, MapkitInstance] | null>,
   annotationRefs: RefObject<Record<string, any>>,
