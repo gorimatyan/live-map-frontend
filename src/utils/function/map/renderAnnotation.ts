@@ -18,17 +18,18 @@ export const renderAnnotations = (
     return
   }
 
-  const newAnnotations = []
+  console.log("renderAnnotations", annotationData.length)
+
+  const newAnnotations: mapkit.Annotation[] = []
   const [map, mapkit]: [MapInstance, MapkitInstance] = mapRef.current
 
-  for (const annotation of annotationData) {
-    console.log(annotation)
+  annotationData.forEach((annotation, index) => {
     if (!annotation.id) {
       throw new Error("Marker must have a id.")
     }
 
     if (annotationRefs.current[annotation.id]) {
-      continue
+      return
     }
 
     const coord = new mapkit.Coordinate(
@@ -84,7 +85,7 @@ export const renderAnnotations = (
     // アノテーションの表示の重複を避ける処理（らしい）。表示済みのアノテーションをRefで管理している。
     // 重複を避けるために、idとtitleの先頭10文字を結合した文字列をキーにして管理している。
     annotationRefs.current[annotation.id + annotation.title.substring(0, 10)] = annotation
-  }
+  })
 
   // newAnnotationsをmapに表示
   if (newAnnotations.length) {

@@ -8,6 +8,7 @@ export async function fetchJson<T>(url: string): Promise<T> {
     headers: {
       "ngrok-skip-browser-warning": "true",
     },
+    next: { revalidate: 600 }, // 10分 = 600秒ごとにサーバー側のキャッシュを再検証
   })
   if (!response.ok) {
     throw new Error(`HTTP error! Status: ${response.status}`)

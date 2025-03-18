@@ -2,7 +2,7 @@
 
 import React, { useEffect, useRef, useState } from "react"
 import { GetNewsData, MapInstance, MapkitInstance } from "@/utils/type/api/GetNewsType"
-import { MarkerAnnotationData, renderAnnotations } from "@/utils/function/map/renderAnnotation"
+import { renderAnnotations } from "@/utils/function/map/renderAnnotation"
 import { loadMapkitJs } from "@/utils/function/map/loadMapkitJs"
 import { toCompatibleBounds } from "@/utils/function/map/toCompatibleBounds"
 import { ChevronIcon } from "../Icons/ChevronIcon"
@@ -16,6 +16,7 @@ import { RightSideContent } from "../RightSideContent/RightSideContent"
 import { HamburgerIcon } from "@/components/Icons/HamburgerIcon"
 import { convertDateLabelToDate } from "@/utils/function/date/convertDateLabelToDate"
 import { HamburgerToggle } from "../HamburgerToggle/HamburgerToggle"
+import { categoryStyleMap } from "@/utils/function/map/categoryStyleMap"
 
 type AppleMapProps = {
   centerPoint: [number, number]
@@ -28,7 +29,7 @@ type AppleMapProps = {
   mapAnnotationData: GetNewsData[]
 } & React.HTMLAttributes<HTMLDivElement>
 
-const categories = ["火災", "殺人", "救急", "警戒", "ハッカソン", "その他"]
+const categories = Object.keys(categoryStyleMap)
 const dates = ["今日", "今日と昨日", "3日以内", "1週間以内", "1ヶ月以内"]
 
 export const AppleMap = ({
@@ -73,7 +74,7 @@ export const AppleMap = ({
   }
 
   /**
-   * このuseEffectはカテゴリーが変更されたときの処理。
+   * このuseEffectは絞り込み機能でカテゴリーが変更されたときの処理。
    * やってることはアノテーションを全部消して、新しく追加してフィルターで弾かれたやつを消すだけ。
    */
   useEffect(() => {
@@ -457,7 +458,7 @@ export const AppleMap = ({
 
       {/* 📌 左側スライドパネル */}
       <div
-        className={`fixed text-gray-700 top-0 left-0 h-full bg-white shadow-lg transition-transform ${
+        className={`fixed text-gray-700 top-0 left-0 h-full bg-white shadow-lg transition-transform z-20 ${
           isSideFrameOpen ? "xl:w-5/12 md:w-2/3 w-11/12 translate-x-0" : "w-0 -translate-x-full"
         }`}
       >
