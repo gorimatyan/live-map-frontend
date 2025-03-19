@@ -101,7 +101,7 @@ export const RightSideContent: React.FC<RightSideContentProps> = ({
                   {item.publishedAt ? new Date(item.publishedAt).toLocaleDateString() : "日付不明"}
                 </div>
 
-                <p className="text-sm text-gray-700">{item.data.area || "エリア情報なし"}</p>
+                <p className="text-sm text-gray-700">{item.data.address || "エリア情報なし"}</p>
               </div>
             ))}
           </div>

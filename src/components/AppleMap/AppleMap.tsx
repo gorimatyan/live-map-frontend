@@ -17,6 +17,7 @@ import { HamburgerIcon } from "@/components/Icons/HamburgerIcon"
 import { convertDateLabelToDate } from "@/utils/function/date/convertDateLabelToDate"
 import { HamburgerToggle } from "../HamburgerToggle/HamburgerToggle"
 import { categoryStyleMap } from "@/utils/function/map/categoryStyleMap"
+import { MapAnnotationType } from "@/utils/type/map/MapAnnotationType"
 
 type AppleMapProps = {
   centerPoint: [number, number]
@@ -228,31 +229,33 @@ export const AppleMap = ({
       const calloutDelegate = _createCalloutDelegate()
 
       // クラスター（複数のピンがまとまった状態）のアノテーションの設定
-      const allAnnotationsCount = clusterAnnotation.memberAnnotations.length
+      const memberAnnotations =
+        clusterAnnotation.memberAnnotations as unknown as MapAnnotationType[]
+      const allAnnotationsCount = memberAnnotations.length
 
-      const firstArea = clusterAnnotation.memberAnnotations[0].data.area
-      const firstTitle = clusterAnnotation.memberAnnotations[0].title
-      const hasDifferentArea = clusterAnnotation.memberAnnotations.some(
-        (annotation) => annotation.data.area !== firstArea
+      const firstAddress = memberAnnotations[0].data.address
+      const firstTitle = memberAnnotations[0].title
+      const hasDifferentAddress = memberAnnotations.some(
+        (annotation) => annotation.data.address !== firstAddress
       )
-      const hasDifferentTitle = clusterAnnotation.memberAnnotations.some(
+      const hasDifferentTitle = memberAnnotations.some(
         (annotation) => annotation.title !== firstTitle
       )
 
-      const includedArea = hasDifferentArea ? `${firstArea} +他` : firstArea
+      const includedAddress = hasDifferentAddress ? `${firstAddress} +他` : firstAddress
       const includedTitle = hasDifferentTitle ? `${firstTitle} +他` : firstTitle
 
       const customAnnotationForCluster = new mapkit.MarkerAnnotation(clusterAnnotation.coordinate, {
         title: includedTitle,
-        subtitle: includedArea,
+        subtitle: includedAddress || "",
         glyphText: allAnnotationsCount.toString(),
         color: "#e30aFF",
         size: { width: 36, height: 52 },
         collisionMode: mapkit.Annotation.CollisionMode.Rectangle, // Circleの方が良い？
         callout: calloutDelegate,
         data: {
-          area: includedArea,
-          link: clusterAnnotation.memberAnnotations[0].data.link,
+          address: includedAddress,
+          link: memberAnnotations[0].data.link,
         },
       })
 

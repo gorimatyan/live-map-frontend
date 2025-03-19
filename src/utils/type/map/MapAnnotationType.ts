@@ -2,7 +2,8 @@ export type MarkerAnnotationData = {
   id: number
   category: string
   location: { lat: number; lng: number }
-  area: string
+  address: string | null
+  predictedLocation: string | null
   link: string
   publishedAt: Date
   markerImgUrl: string
