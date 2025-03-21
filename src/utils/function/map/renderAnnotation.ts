@@ -1,7 +1,11 @@
-import { GetNewsData, MapInstance, MapkitInstance } from "@/utils/type/api/GetNewsType"
+import {
+  GetNewsData,
+  MapInstance,
+  MapkitInstance,
+  MarkerAnnotationData,
+} from "@/utils/type/api/GetNewsType"
 import { RefObject } from "react"
 import { categoryStyleMap } from "./categoryStyleMap"
-import { MarkerAnnotationData } from "@/utils/type/map/MapAnnotationType"
 
 /**
  * マーカー（アノテーション）の表示をする関数

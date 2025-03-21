@@ -1,4 +1,4 @@
-import { MarkerAnnotationData } from "@/utils/type/map/MapAnnotationType"
+import { MarkerAnnotationData } from "../type/api/GetNewsType"
 
 /**
  * 🔄 マップアノテーションデータを Twitter API に渡すためのクエリに変換する関数

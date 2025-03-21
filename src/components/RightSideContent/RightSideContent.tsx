@@ -1,27 +1,27 @@
 import React, { useState } from "react"
 import { GetNewsData } from "@/utils/type/api/GetNewsType"
-import { CalendarIcon } from "@/components/Icons/CalendarIcon"
+import { LocationListItem } from "@/components/LocationListItem/LocationListItem"
 
 type RightSideContentProps = {
   mapAnnotationData: GetNewsData[]
   selectedCategories: string[]
-  onSelectAnnotation: (annotation: GetNewsData) => void
   handleCategoryChange: (category: string) => void
   categories: string[]
   selectedDate: string
   handleDateChange: (date: string) => void
   dates: string[]
+  onSelectAnnotation: (item: GetNewsData) => void
 }
 
 export const RightSideContent: React.FC<RightSideContentProps> = ({
   mapAnnotationData,
   selectedCategories,
-  onSelectAnnotation,
   handleCategoryChange,
   categories,
   selectedDate,
   handleDateChange,
   dates,
+  onSelectAnnotation,
 }) => {
   const [activeTab, setActiveTab] = useState<"new" | "filter">("new")
 
@@ -81,28 +81,14 @@ export const RightSideContent: React.FC<RightSideContentProps> = ({
           // 🆕 新着情報タブ
           <div className="bg-white">
             {sortedAnnotations.map((item, index) => (
-              <div
+              <LocationListItem
                 key={index}
-                className="px-4 py-4 border-b border-gray-200 last:rounded-b-lg hover:bg-gray-200 dark:hover:bg-gray-800 transition duration-200 flex flex-col gap-2 cursor-pointer"
+                category={item.category}
+                contentBody={item.contentBody}
+                publishedAt={item.publishedAt}
+                address={item.data.address}
                 onClick={() => onSelectAnnotation(item)}
-              >
-                {/* カテゴリ */}
-                <span className="text-sm font-semibold px-4 bg-blue-100 text-blue-700 rounded-full self-start">
-                  {item.category}
-                </span>
-
-                <span className="text-sm font-semibold text-gray-700 self-start">
-                  {item.contentBody}
-                </span>
-
-                {/* 日付 & エリア */}
-                <div className="flex items-center text-sm text-gray-400">
-                  <CalendarIcon className="w-4 h-4 mr-1 text-gray-400" />
-                  {item.publishedAt ? new Date(item.publishedAt).toLocaleDateString() : "日付不明"}
-                </div>
-
-                <p className="text-sm text-gray-700">{item.data.address || "エリア情報なし"}</p>
-              </div>
+              />
             ))}
           </div>
         ) : (
