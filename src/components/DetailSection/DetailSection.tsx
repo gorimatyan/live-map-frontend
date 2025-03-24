@@ -26,10 +26,19 @@ export const DetailSection: React.FC<DetailSectionProps> = ({ selectedAnnotation
       </p>
     </div>
 
-    <div className="mb-4">
-      <h3 className="font-semibold text-lg leading-loose">エリア情報</h3>
-      <p>{selectedAnnotation.data.area}</p>
-    </div>
+    {selectedAnnotation.data.address && (
+      <div className="mb-4">
+        <h3 className="font-semibold text-lg leading-loose">エリア情報</h3>
+        <p>{selectedAnnotation.data.address}</p>
+      </div>
+    )}
+
+    {selectedAnnotation.data.predictedLocation && (
+      <div className="mb-4">
+        <h3 className="font-semibold text-lg leading-loose">AIによる位置推定</h3>
+        <p>{selectedAnnotation.data.predictedLocation}</p>
+      </div>
+    )}
 
     {selectedAnnotation.title && (
       <div className="mb-4">

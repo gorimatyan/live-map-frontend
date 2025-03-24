@@ -1,7 +1,11 @@
-import { GetNewsData, MapInstance, MapkitInstance } from "@/utils/type/api/GetNewsType"
+import {
+  GetNewsData,
+  MapInstance,
+  MapkitInstance,
+  MarkerAnnotationData,
+} from "@/utils/type/api/GetNewsType"
 import { RefObject } from "react"
 import { categoryStyleMap } from "./categoryStyleMap"
-import { MarkerAnnotationData } from "@/utils/type/map/MapAnnotationType"
 
 /**
  * マーカー（アノテーション）の表示をする関数
@@ -53,7 +57,7 @@ export const renderAnnotations = (
     //     size: annotation.markerImgUrl ? { width: 36, height: 52 } : undefined,
     //     glyphText: annotation.category === "交通" ? "🚗" : "🍴",
     //     // glyphImage: { 1: "/images/m3.webp" },
-    //     data: { id: annotation.id, area: annotation.data.area, link: annotation.data.link },
+    //     data: { id: annotation.id, address: annotation.data.address, link: annotation.data.link },
     //   }
     // )
 
@@ -71,7 +75,8 @@ export const renderAnnotations = (
         id: annotation.id,
         category: annotation.category,
         location: annotation.location,
-        area: annotation.data.area,
+        address: annotation.data.address,
+        predictedLocation: annotation.data.predictedLocation,
         link: annotation.data.link,
         publishedAt: annotation.publishedAt,
         sourceName: annotation.sourceName,

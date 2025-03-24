@@ -14,7 +14,7 @@ type RealtimeMapContainerProps = {
 export function RealtimeMapContainer({ initialData }: RealtimeMapContainerProps) {
   // 初期データをサーバーから受け取る
   const [mapAnnotationData, setMapAnnotationData] = useState<GetNewsData[]>(initialData)
-  console.log("初期データ", initialData.length)
+  console.log("初期データ", initialData)
 
   // ユーザーがページを更新（リロード）したときのデータ更新関数
   async function refreshData() {

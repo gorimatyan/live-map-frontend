@@ -17,6 +17,7 @@ import { HamburgerIcon } from "@/components/Icons/HamburgerIcon"
 import { convertDateLabelToDate } from "@/utils/function/date/convertDateLabelToDate"
 import { HamburgerToggle } from "../HamburgerToggle/HamburgerToggle"
 import { categoryStyleMap } from "@/utils/function/map/categoryStyleMap"
+import { LocationListItem } from "../LocationListItem/LocationListItem"
 
 type AppleMapProps = {
   centerPoint: [number, number]
@@ -26,6 +27,9 @@ type AppleMapProps = {
     getSouthWest: () => [number, number]
     getNorthEast: () => [number, number]
   }) => void
+  /**
+   * APIから取得したニュース・消防データ
+   */
   mapAnnotationData: GetNewsData[]
 } & React.HTMLAttributes<HTMLDivElement>
 
@@ -53,6 +57,10 @@ export const AppleMap = ({
   const [selectedDate, setSelectedDate] = useState<string>("")
   const [isDarkMode, setIsDarkMode] = useState<boolean>(false) // ダークモードの状態を管理
   const [isListOpen, setIsListOpen] = useState(false)
+  const [isClusterListOpen, setIsClusterListOpen] = useState(false)
+  const [selectedClusterAnnotation, setSelectedClusterAnnotation] = useState<
+    mapkit.Annotation[] | null
+  >(null)
 
   const handleCategoryChange = (category: string) => {
     setSelectedCategories((prev) =>
@@ -224,35 +232,36 @@ export const AppleMap = ({
       if (clusterAnnotation.clusteringIdentifier === "city") {
       }
 
-      // クリック時に表示される要素の設定
-      const calloutDelegate = _createCalloutDelegate()
-
       // クラスター（複数のピンがまとまった状態）のアノテーションの設定
-      const allAnnotationsCount = clusterAnnotation.memberAnnotations.length
+      const memberAnnotations = clusterAnnotation.memberAnnotations
+      const allAnnotationsCount = memberAnnotations.length
 
-      const firstArea = clusterAnnotation.memberAnnotations[0].data.area
-      const firstTitle = clusterAnnotation.memberAnnotations[0].title
-      const hasDifferentArea = clusterAnnotation.memberAnnotations.some(
-        (annotation) => annotation.data.area !== firstArea
+      // クリック時に表示される要素の設定
+      const calloutDelegate = _createCalloutDelegate(allAnnotationsCount)
+
+      const firstAddress = memberAnnotations[0].data.address
+      const firstTitle = memberAnnotations[0].title
+      const hasDifferentAddress = memberAnnotations.some(
+        (annotation) => annotation.data.address !== firstAddress
       )
-      const hasDifferentTitle = clusterAnnotation.memberAnnotations.some(
+      const hasDifferentTitle = memberAnnotations.some(
         (annotation) => annotation.title !== firstTitle
       )
 
-      const includedArea = hasDifferentArea ? `${firstArea} +他` : firstArea
+      const includedAddress = hasDifferentAddress ? `${firstAddress} +他` : firstAddress
       const includedTitle = hasDifferentTitle ? `${firstTitle} +他` : firstTitle
 
       const customAnnotationForCluster = new mapkit.MarkerAnnotation(clusterAnnotation.coordinate, {
         title: includedTitle,
-        subtitle: includedArea,
+        subtitle: includedAddress || "",
         glyphText: allAnnotationsCount.toString(),
         color: "#e30aFF",
         size: { width: 36, height: 52 },
         collisionMode: mapkit.Annotation.CollisionMode.Rectangle, // Circleの方が良い？
         callout: calloutDelegate,
         data: {
-          area: includedArea,
-          link: clusterAnnotation.memberAnnotations[0].data.link,
+          address: firstAddress,
+          link: memberAnnotations[0].data.link,
         },
       })
 
@@ -263,27 +272,27 @@ export const AppleMap = ({
   /**
    * クリック時に表示される要素の設定を行う関数
    */
-  const _createCalloutDelegate = () => ({
-    calloutElementForAnnotation: function (annotation: mapkit.Annotation) {
+  const _createCalloutDelegate = (allAnnotationsCount: number) => ({
+    calloutElementForAnnotation: function (clusterAnnotation: mapkit.Annotation) {
+      console.log("🔍 クリック時に表示される要素の設定", clusterAnnotation)
+
       const element = document.createElement("div")
-      element.className = "review-callout"
+      element.className = "review-callout text-gray-700 p-4"
 
-      const title = element.appendChild(document.createElement("h1"))
-      title.textContent = annotation.title
+      const topText = element.appendChild(document.createElement("p"))
+      topText.textContent = `${allAnnotationsCount}件のニュース`
 
-      const link = element.appendChild(document.createElement("a"))
-      link.href = annotation.data.link
-      link.textContent = annotation.data.area
+      const bottomText = element.appendChild(document.createElement("p"))
+      bottomText.textContent = clusterAnnotation.data.address
+      bottomText.className = "text-sm"
 
       // スタイルを設定
-      element.style.width = "240px"
-      element.style.height = "100px"
+      element.style.width = "250px"
       element.style.position = "relative"
       element.style.backgroundColor = "white"
       element.style.border = "1px solid #ccc"
       element.style.borderRadius = "10px"
       element.style.boxShadow = "0 2px 10px rgba(0, 0, 0, 0.1)"
-      element.style.padding = "10px"
 
       // 吹き出しの三角形を追加
       const triangle = document.createElement("div")
@@ -332,6 +341,10 @@ export const AppleMap = ({
         // ズームレベルが0.005以上の場合は拡大表示する
         if (currentSpan.latitudeDelta > 0.005) {
           map.setRegionAnimated(region)
+        } else {
+          // 座標が重複した場合はリストを開く
+          setIsClusterListOpen(true)
+          setSelectedClusterAnnotation(event.annotation.memberAnnotations)
         }
 
         return
@@ -431,7 +444,7 @@ export const AppleMap = ({
           <>
             {/* 📌 閉じるボタン */}
             <button
-              className="absolute rounded-full top-1/2 right-0 transform -translate-y-1/2 bg-white border border-gray-300 p-3 shadow-lg"
+              className="absolute rounded-full top-[50dvh] right-0 transform -translate-y-1/2 bg-white border border-gray-300 p-3 shadow-lg"
               onClick={() => setIsListOpen(false)}
             >
               <ChevronIcon className="fill-gray-700 size-6 rotate-180" />
@@ -456,6 +469,42 @@ export const AppleMap = ({
         )}
       </div>
 
+      {/* 📌 クラスターリスト */}
+      <div
+        className={`fixed z-20 top-0 right-0 h-full bg-white shadow-lg transition-transform ${
+          isClusterListOpen ? "xl:w-5/12 md:w-2/3 w-11/12 translate-x-0" : "w-0 translate-x-full"
+        }`}
+      >
+        {isClusterListOpen && (
+          <>
+            {/* 📌 閉じるボタン */}
+            <button
+              className="absolute rounded-full top-[50dvh] right-0 transform -translate-y-1/2 bg-white border border-gray-300 p-3 shadow-lg"
+              onClick={() => setIsClusterListOpen(false)}
+            >
+              <ChevronIcon className="fill-gray-700 size-6 rotate-180" />
+            </button>
+
+            {/* 📌 クラスターアノテーションのリスト */}
+            <div className="p-6 overflow-y-auto h-full">
+              <h2 className="text-2xl font-bold mb-4 border-b border-gray-700 pb-2">
+                📌 {selectedClusterAnnotation?.[0].data.address}付近
+              </h2>
+              {selectedClusterAnnotation?.map((annotation, index) => (
+                <LocationListItem
+                  key={index}
+                  category={annotation.data.category}
+                  contentBody={annotation.title}
+                  publishedAt={annotation.data.publishedAt}
+                  address={annotation.data.address}
+                  onClick={() => handleSelect(annotation)}
+                />
+              ))}
+            </div>
+          </>
+        )}
+      </div>
+
       {/* 📌 左側スライドパネル */}
       <div
         className={`fixed text-gray-700 top-0 left-0 h-full bg-white shadow-lg transition-transform z-20 ${
@@ -468,7 +517,7 @@ export const AppleMap = ({
           <button
             tabIndex={undefined}
             onClick={() => setIsSideFrameOpen(!isSideFrameOpen)}
-            className="absolute rounded-full border border-gray-300 top-[50dvh] right-6 transform translate-x-full bg-white p-3"
+            className="absolute rounded-full border border-gray-300 top-[50dvh] right-6 transform -translate-y-1/2 translate-x-full bg-white p-3"
           >
             <ChevronIcon className="fill-gray-700 size-6" />
           </button>
