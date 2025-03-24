@@ -50,7 +50,7 @@ export function RealtimeMapContainer({ initialData }: RealtimeMapContainerProps)
       {/* 更新ボタン */}
       <button
         onClick={refreshData}
-        className="fixed top-4 right-4 z-10 bg-blue-500 text-white py-2 px-4 rounded shadow"
+        className="fixed top-2 right-4 z-10 bg-blue-500 text-white py-2 px-4 rounded shadow"
       >
         最新情報に更新
       </button>

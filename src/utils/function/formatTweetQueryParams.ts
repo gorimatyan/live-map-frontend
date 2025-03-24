@@ -8,7 +8,7 @@ import { MarkerAnnotationData } from "../type/api/GetNewsType"
  */
 export const formatTweetQueryParams = (data: MarkerAnnotationData): string => {
   // 📌 エリア情報を都道府県・市区町村レベルまでにする（丁目・番地は除外）
-  let addressParts = data.address
+  const addressParts = data.address
     ?.replace(/[0-9０-９\-−丁目番地号]/g, "") // 「1丁目10−20」などの詳細住所を削除
     .replace(/市|区|町|村|県|府|道|都/g, " ") // 「市・区・町・村・県」をスペースに変換
     .split(/\s+/) // 空白で分割

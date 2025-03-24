@@ -1,4 +1,3 @@
-import { MapContainer } from "@/components/MapContainer/MapContainer"
 import { NEWS_API_ENDPOINT, GetNewsData } from "@/utils/type/api/GetNewsType"
 import { FIRE_API_ENDPOINT, GetFireData } from "@/utils/type/api/GetMissionType"
 import { serverFetchJson } from "@/utils/function/serverFetch"

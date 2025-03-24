@@ -1,7 +1,6 @@
 import type { Metadata } from "next"
 import { Geist, Geist_Mono } from "next/font/google"
 import "./globals.css"
-import Head from "next/head"
 import Script from "next/script"
 import { Noto_Sans_JP } from "next/font/google"
 
@@ -118,15 +117,14 @@ export default function RootLayout({
 
   return (
     <html lang="en">
-      <Head>
-        <Script src="https://cdn.apple-mapkit.com/mk/5.0.x/mapkit.js"></Script>
-        <Script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{
-            __html: JSON.stringify(structuredData),
-          }}
-        />
-      </Head>
+      <Script src="https://cdn.apple-mapkit.com/mk/5.0.x/mapkit.js"></Script>
+      <Script
+        id="schema-data"
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(structuredData),
+        }}
+      />
       <body
         className={`${geistSans.variable} ${geistMono.variable} ${NotoSansJPFont.className} antialiased h-full w-full`}
       >
