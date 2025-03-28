@@ -11,7 +11,6 @@ export const convertDateLabelToDate = (label: string): Date => {
       today.setHours(0, 0, 0, 0) // 今日の00:00:00.000に設定
       return today
     case "今日と昨日":
-      const yesterday = new Date(today)
       today.setDate(today.getDate() - 1)
       return today
     case "3日以内":

@@ -1,11 +1,7 @@
-import {
-  GetNewsData,
-  MapInstance,
-  MapkitInstance,
-  MarkerAnnotationData,
-} from "@/utils/type/api/GetNewsType"
+import { GetNewsData, MapInstance, MapkitInstance } from "@/utils/type/api/GetNewsType"
 import { RefObject } from "react"
 import { categoryStyleMap } from "./categoryStyleMap"
+import { MarkerAnnotationData } from "@/utils/type/api/common/GetAnnotationsType"
 
 /**
  * マーカー（アノテーション）の表示をする関数
@@ -15,6 +11,7 @@ import { categoryStyleMap } from "./categoryStyleMap"
  */
 export const renderAnnotations = (
   mapRef: RefObject<[MapInstance, MapkitInstance] | null>,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   annotationRefs: RefObject<Record<string, any>>,
   annotationData: GetNewsData[]
 ) => {
@@ -27,7 +24,7 @@ export const renderAnnotations = (
   const newAnnotations: mapkit.Annotation[] = []
   const [map, mapkit]: [MapInstance, MapkitInstance] = mapRef.current
 
-  annotationData.forEach((annotation, index) => {
+  annotationData.forEach((annotation) => {
     if (!annotation.id) {
       throw new Error("Marker must have a id.")
     }
