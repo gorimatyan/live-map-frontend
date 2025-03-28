@@ -13,7 +13,6 @@ import { TweetList } from "../TweetList/TweetList"
 import { DetailSection } from "../DetailSection/DetailSection"
 import { DarkModeToggle } from "../DarkModeToggle/DarkModeToggle"
 import { RightSideContent } from "../RightSideContent/RightSideContent"
-import { HamburgerIcon } from "@/components/Icons/HamburgerIcon"
 import { convertDateLabelToDate } from "@/utils/function/date/convertDateLabelToDate"
 import { HamburgerToggle } from "../HamburgerToggle/HamburgerToggle"
 import { categoryStyleMap } from "@/utils/function/map/categoryStyleMap"
@@ -38,7 +37,6 @@ const dates = ["今日", "今日と昨日", "3日以内", "1週間以内", "1ヶ
 
 export const AppleMap = ({
   centerPoint,
-  mapOptions = {},
   zoom,
   onBoundsChanged,
   className,
@@ -47,6 +45,7 @@ export const AppleMap = ({
 }: AppleMapProps) => {
   const div = useRef<HTMLDivElement>(null)
   const mapRef = useRef<[MapInstance, MapkitInstance] | null>(null) // マップの状態管理用のref
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const annotationRefs = useRef<Record<string, any>>({}) // アノテーション（マップにある印）の状態管理用のref
   const [isSideFrameOpen, setIsSideFrameOpen] = useState<boolean>(false)
   const [selectedElement, setSelectedElement] = useState<HTMLElement | null>(null)
@@ -138,6 +137,8 @@ export const AppleMap = ({
 
       _initializeMap(mapkit)
     })
+
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [div, isDarkMode]) // isDarkModeが変わるたびに再レンダリング
 
   useEffect(() => {

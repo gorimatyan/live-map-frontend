@@ -2,6 +2,7 @@ import React from "react"
 import { GetTweetData } from "@/utils/type/api/GetTweetType"
 import { HeartIcon } from "../Icons/HeartIcon"
 import { RetweetIcon } from "../Icons/RetweetIcon"
+import Image from "next/image"
 
 type TweetListProps = {
   tweets: GetTweetData[] | null
@@ -41,8 +42,11 @@ export const TweetList: React.FC<TweetListProps> = ({ tweets }) => {
           className="block border border-gray-300 w-full p-5 rounded-lg bg-white dark:bg-gray-800 shadow-md flex-col flex items-start gap-4 hover:bg-gray-100 transition"
         >
           <div className="flex items-start space-x-4">
-            <img
-              src={tweet.authorProfile || "https://abs.twimg.com/sticky/default_profile_images/default_profile_normal.png"}
+            <Image
+              src={
+                tweet.authorProfile ||
+                "https://abs.twimg.com/sticky/default_profile_images/default_profile_normal.png"
+              }
               alt="Profile"
               className="w-12 h-12 rounded-full"
             />
@@ -56,7 +60,7 @@ export const TweetList: React.FC<TweetListProps> = ({ tweets }) => {
           <div className="flex flex-col gap-3 w-full">
             <p className="text-lg text-gray-700 whitespace-pre-line">{tweet.text}</p>
             {tweet.mediaUrl && (
-              <img
+              <Image
                 src={tweet.mediaUrl}
                 alt="Tweet media"
                 className="rounded-lg border w-full object-cover"

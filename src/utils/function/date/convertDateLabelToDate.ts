@@ -9,7 +9,6 @@ export const convertDateLabelToDate = (label: string): Date => {
     case "今日":
       return today
     case "今日と昨日":
-      const yesterday = new Date(today)
       today.setDate(today.getDate() - 1)
       return today
     case "3日以内":
