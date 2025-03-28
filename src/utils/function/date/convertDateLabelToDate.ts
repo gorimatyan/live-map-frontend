@@ -5,8 +5,10 @@
  */
 export const convertDateLabelToDate = (label: string): Date => {
   const today = new Date()
+
   switch (label) {
     case "今日":
+      today.setHours(0, 0, 0, 0) // 今日の00:00:00.000に設定
       return today
     case "今日と昨日":
       const yesterday = new Date(today)
