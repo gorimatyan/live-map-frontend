@@ -3,6 +3,7 @@ import { FIRE_API_ENDPOINT, GetFireData } from "@/utils/type/api/GetMissionType"
 import { serverFetchJson } from "@/utils/function/serverFetch"
 import { Metadata } from "next"
 import { RealtimeMapContainer } from "@/components/RealtimeMapContainer/RealtimeMapContainer"
+import Link from "next/link"
 
 export const metadata: Metadata = {
   title: "ライブマップ.net | 地域の災害・ニュース情報をリアルタイムで",
@@ -80,6 +81,9 @@ export default async function Home() {
           }}
         />
       )}
+      <h1 className="opacity-40 absolute top-1 left-1 text-xl font-bold z-10">
+        <Link href="/guide">ライブマップ.NET</Link>
+      </h1>
 
       {/* リアルタイムデータを取得するクライアントコンポーネント */}
       <RealtimeMapContainer initialData={mapAnnotationData} />

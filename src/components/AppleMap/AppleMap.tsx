@@ -17,6 +17,7 @@ import { convertDateLabelToDate } from "@/utils/function/date/convertDateLabelTo
 import { HamburgerToggle } from "../HamburgerToggle/HamburgerToggle"
 import { categoryStyleMap } from "@/utils/function/map/categoryStyleMap"
 import { LocationListItem } from "../LocationListItem/LocationListItem"
+import Link from "next/link"
 
 type AppleMapProps = {
   centerPoint: [number, number]
@@ -209,6 +210,132 @@ export const AppleMap = ({
     _setupClusterAnnotation(map)
     _setupEventListeners(map)
     renderAnnotations(mapRef, annotationRefs, mapAnnotationData)
+
+    /**
+     * アノテーションが画面外に出たときに、画面内にインジケーターを表示する関数
+     */
+    function styleAnnotations() {
+      map.annotations.forEach((annotation) => {
+        if (!annotation.element) return
+        const element = annotation.element as HTMLElement
+
+        // 基本スタイル
+        element.style.position = "absolute"
+        element.style.top = "50%"
+        element.style.left = "50%"
+
+        // 画面外インジケーターの作成
+        const indicator = document.createElement("div")
+        indicator.style.cssText = `
+          position: fixed;
+          display: none;
+          align-items: center;
+          justify-content: center;
+          z-index: 1000;
+          cursor: pointer;
+          background-color: ${categoryStyleMap[annotation.data.category]?.color || "#222222"};
+          box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+          transition: all 0.3s ease;
+        `
+        indicator.innerHTML = categoryStyleMap[annotation.data.category]?.emoji || "📍"
+        document.body.appendChild(indicator)
+
+        // インジケーターのクリックイベント
+        indicator.addEventListener("click", () => {
+          const coordinate = annotation.coordinate
+          const span = new mapkit.CoordinateSpan(0.01, 0.01)
+          const region = new mapkit.CoordinateRegion(coordinate, span)
+          map.setRegionAnimated(region)
+        })
+
+        // 位置更新の関数
+        function updateIndicatorPosition() {
+          const rect = annotation.element.getBoundingClientRect()
+          const viewportWidth = window.innerWidth
+          const viewportHeight = window.innerHeight
+          const padding = 0 // 画面端からの距離
+
+          // 画面外かどうかの判定
+          const isOffScreen =
+            rect.right < 0 || // 完全に左側にはみ出している
+            rect.left > viewportWidth || // 完全に右側にはみ出している
+            rect.bottom < 0 || // 完全に上側にはみ出している
+            rect.top > viewportHeight // 完全に下側にはみ出している
+
+          if (isOffScreen) {
+            // マーカーの中心座標
+            const markerX = rect.left + rect.width / 2
+            const markerY = rect.top + rect.height / 2
+
+            // インジケーターの位置とサイズを設定
+            indicator.style.display = "flex"
+
+            if (markerX < 0) {
+              // 左端
+              indicator.style.left = `${padding}px`
+              indicator.style.top = `${Math.max(padding, Math.min(viewportHeight - 60, markerY))}px`
+              indicator.style.width = "30px"
+              indicator.style.height = "30px"
+              indicator.style.borderRadius = "999px"
+            } else if (markerX > viewportWidth) {
+              // 右端
+              indicator.style.right = `${padding}px`
+              indicator.style.left = "auto"
+              indicator.style.top = `${Math.max(padding, Math.min(viewportHeight - 60, markerY))}px`
+              indicator.style.width = "30px"
+              indicator.style.height = "30px"
+              indicator.style.borderRadius = "999px"
+            } else if (markerY < 0) {
+              // 上端
+              indicator.style.top = `${padding}px`
+              indicator.style.left = `${Math.max(padding, Math.min(viewportWidth - 60, markerX))}px`
+              indicator.style.width = "30px"
+              indicator.style.height = "30px"
+              indicator.style.borderRadius = "999px"
+            } else if (markerY > viewportHeight) {
+              // 下端
+              indicator.style.bottom = `${padding}px`
+              indicator.style.top = "auto"
+              indicator.style.left = `${Math.max(padding, Math.min(viewportWidth - 60, markerX))}px`
+              indicator.style.width = "30px"
+              indicator.style.height = "30px"
+              indicator.style.borderRadius = "999px"
+            }
+          } else {
+            indicator.style.display = "none"
+          }
+        }
+
+        // スクロールとリサイズ時に位置を更新
+        window.addEventListener("scroll", updateIndicatorPosition)
+        window.addEventListener("resize", updateIndicatorPosition)
+
+        // マップの移動時に位置を更新
+        map.addEventListener("region-change-start", (event) => {
+          console.log("🗺️ region-change-start", event)
+          updateIndicatorPosition()
+        })
+
+        map.addEventListener("region-change-end", (event) => {
+          console.log("🗺️ region-change-end", event)
+          updateIndicatorPosition()
+        })
+
+        // 初期位置の設定
+        updateIndicatorPosition()
+
+        // クリーンアップ関数
+        return () => {
+          window.removeEventListener("scroll", updateIndicatorPosition)
+          window.removeEventListener("resize", updateIndicatorPosition)
+          map.removeEventListener("region-change-start", () => updateIndicatorPosition())
+          map.removeEventListener("region-change-end", () => updateIndicatorPosition())
+          indicator.remove()
+        }
+      })
+    }
+
+    styleAnnotations()
   }
 
   /**
@@ -431,9 +558,20 @@ export const AppleMap = ({
       <div ref={div} className={className} {...props} />
 
       {/* 📌 右上のダークモードボタン */}
-      <DarkModeToggle isDarkMode={isDarkMode} toggleDarkMode={toggleDarkMode} />
-      {/* 📌 右上のハンバーガーボタン */}
-      <HamburgerToggle toggleHamburger={() => setIsListOpen(!isListOpen)} />
+      <div className="fixed top-14 right-3 flex flex-col gap-2">
+        <DarkModeToggle isDarkMode={isDarkMode} toggleDarkMode={toggleDarkMode} />
+        {/* 📌 右上のハンバーガーボタン */}
+        <HamburgerToggle toggleHamburger={() => setIsListOpen(!isListOpen)} />
+        {/* 📌 右上の使い方ボタン */}
+        <Link href="/guide">
+          <button
+            className="p-1 sm:p-2 rounded-full shadow-lg bg-white dark:bg-[#272935] text-2xl z-10"
+            aria-label="使い方ボタン"
+          >
+            🗺️
+          </button>
+        </Link>
+      </div>
 
       {/* 📌 右側スライドパネル */}
       <div
