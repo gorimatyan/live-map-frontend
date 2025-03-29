@@ -11,6 +11,8 @@ export function AnimatedHeading({ children, className = "" }: AnimatedHeadingPro
   const headingRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
+    const element = headingRef.current
+
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
@@ -29,13 +31,13 @@ export function AnimatedHeading({ children, className = "" }: AnimatedHeadingPro
       }
     )
 
-    if (headingRef.current) {
-      observer.observe(headingRef.current)
+    if (element) {
+      observer.observe(element)
     }
 
     return () => {
-      if (headingRef.current) {
-        observer.unobserve(headingRef.current)
+      if (element) {
+        observer.unobserve(element)
       }
     }
   }, [])

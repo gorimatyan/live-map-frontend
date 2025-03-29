@@ -1,5 +1,4 @@
 "use client"
-import { useState } from "react"
 import { HeroSection } from "./Sections/HeroSection"
 import { FeaturesSection } from "./Sections/FeaturesSection"
 import { HowToUseSection } from "./Sections/HowToUseSection"

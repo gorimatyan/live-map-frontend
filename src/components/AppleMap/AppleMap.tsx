@@ -17,7 +17,6 @@ import { convertDateLabelToDate } from "@/utils/function/date/convertDateLabelTo
 import { HamburgerToggle } from "../HamburgerToggle/HamburgerToggle"
 import { categoryStyleMap } from "@/utils/function/map/categoryStyleMap"
 import { LocationListItem } from "../LocationListItem/LocationListItem"
-import { HamburgerIcon } from "../Icons/HamburgerIcon"
 import Link from "next/link"
 
 type AppleMapProps = {
