@@ -17,6 +17,8 @@ import { convertDateLabelToDate } from "@/utils/function/date/convertDateLabelTo
 import { HamburgerToggle } from "../HamburgerToggle/HamburgerToggle"
 import { categoryStyleMap } from "@/utils/function/map/categoryStyleMap"
 import { LocationListItem } from "../LocationListItem/LocationListItem"
+import { HamburgerIcon } from "../Icons/HamburgerIcon"
+import Link from "next/link"
 
 type AppleMapProps = {
   centerPoint: [number, number]
@@ -557,9 +559,20 @@ export const AppleMap = ({
       <div ref={div} className={className} {...props} />
 
       {/* 📌 右上のダークモードボタン */}
-      <DarkModeToggle isDarkMode={isDarkMode} toggleDarkMode={toggleDarkMode} />
-      {/* 📌 右上のハンバーガーボタン */}
-      <HamburgerToggle toggleHamburger={() => setIsListOpen(!isListOpen)} />
+      <div className="fixed top-14 right-3 flex flex-col gap-2">
+        <DarkModeToggle isDarkMode={isDarkMode} toggleDarkMode={toggleDarkMode} />
+        {/* 📌 右上のハンバーガーボタン */}
+        <HamburgerToggle toggleHamburger={() => setIsListOpen(!isListOpen)} />
+        {/* 📌 右上の使い方ボタン */}
+        <Link href="/guide">
+          <button
+            className="p-1 sm:p-2 rounded-full shadow-lg bg-white dark:bg-[#272935] text-2xl z-10"
+            aria-label="使い方ボタン"
+          >
+            🗺️
+          </button>
+        </Link>
+      </div>
 
       {/* 📌 右側スライドパネル */}
       <div
